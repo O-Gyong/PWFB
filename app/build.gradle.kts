@@ -16,20 +16,45 @@ if (localPropertiesFile.exists()) {
     localProperties.load(FileInputStream(localPropertiesFile))
 }
 
+// 릴리즈 서명 정보가 모두 있을 때만 release 서명을 설정 (없으면 debug 빌드/테스트는 그대로 가능)
+val hasReleaseSigning = listOf("storeFile", "keyAlias", "keyPassword", "storePassword")
+    .all { !localProperties.getProperty(it).isNullOrBlank() }
+
+val adMobApiKey: String? = localProperties.getProperty("AdMobAPI_KEY")?.takeIf { it.isNotBlank() }
+
+// Google 공식 테스트 앱 ID (크래시 방지)
+val adMobTestAppId = "ca-app-pub-3940256099942544~3347511713"
+
+// 릴리즈 빌드는 서명 정보와 AdMob 키가 없으면 빌드를 막음 (서명 안 된 APK, 광고 ID 없는 앱 배포 방지)
+gradle.taskGraph.whenReady {
+    val isReleaseBuild = allTasks.any {
+        it.project == project && (it.name.startsWith("assembleRelease") || it.name.startsWith("bundleRelease"))
+    }
+    if (isReleaseBuild) {
+        if (!hasReleaseSigning) {
+            throw GradleException("릴리즈 빌드에는 local.properties의 storeFile, keyAlias, keyPassword, storePassword가 필요합니다.")
+        }
+        if (adMobApiKey == null) {
+            throw GradleException("릴리즈 빌드에는 local.properties의 AdMobAPI_KEY가 필요합니다.")
+        }
+    }
+}
+
 android {
-    signingConfigs {
-        create("release") {
-            keyAlias = localProperties["keyAlias"] as String
-            keyPassword = localProperties["keyPassword"] as String
-            storePassword = localProperties["storePassword"] as String
-            storeFile = file(localProperties["storeFile"] as String)
+    if (hasReleaseSigning) {
+        signingConfigs {
+            create("release") {
+                keyAlias = localProperties.getProperty("keyAlias")
+                keyPassword = localProperties.getProperty("keyPassword")
+                storePassword = localProperties.getProperty("storePassword")
+                storeFile = file(localProperties.getProperty("storeFile"))
+            }
         }
     }
     namespace = "com.pwfb"
     compileSdk = 36
 
     defaultConfig {
-        manifestPlaceholders += mapOf()
         applicationId = "com.pwfb"
         minSdk = 29
         targetSdk = 36
@@ -37,13 +62,19 @@ android {
         versionName = "1.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        signingConfig = signingConfigs.getByName("release")
-        manifestPlaceholders["AdMobAPI_KEY"] = localProperties.getProperty("AdMobAPI_KEY") ?: ""
     }
 
     buildTypes {
+        debug {
+            manifestPlaceholders["AdMobAPI_KEY"] = adMobApiKey ?: adMobTestAppId
+        }
         release {
+            manifestPlaceholders["AdMobAPI_KEY"] = adMobApiKey ?: ""
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

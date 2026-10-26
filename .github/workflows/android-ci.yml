@@ -6,8 +6,13 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+
 jobs:
   build:
+    # 외부(fork) PR은 Repository Secret을 읽을 수 없어 google-services.json을 만들 수 없으므로 실행하지 않음
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
 
     steps:
@@ -23,27 +28,34 @@ jobs:
 
       - name: Create google-services.json
         shell: bash
-        run: echo "$GOOGLE_SERVICES_JSON" > app/google-services.json
+        run: printf '%s' "$GOOGLE_SERVICES_JSON" > app/google-services.json
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }} # Repository Secret을 읽어옴
 
-      # --- 2. Push(main 브랜치)일 때만 실행되는 릴리즈 단계 ---
+      # --- Push(main 브랜치)일 때만 서명 키 등 릴리즈 시크릿을 사용 (PR에는 노출하지 않음) ---
       - name: Setup Release Files (Keystore, Properties)
+        if: github.event_name == 'push'
         shell: bash
+        env:
+          STORE_FILE: ${{ secrets.STORE_FILE }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          ADMOB_API_KEY: ${{ secrets.ADMOB_API_KEY }}
         run: |
           # 1. Keystore 파일 생성
-          echo "${{ secrets.STORE_FILE }}" | base64 --decode > ${{ github.workspace }}/pwfb-keystore.jks
-          
+          printf '%s' "$STORE_FILE" | base64 --decode > "$GITHUB_WORKSPACE/pwfb-keystore.jks"
+
           # 2. local.properties 생성
           # (storeFile에 방금 위에서 생성한 파일의 '정확한 경로'를 지정)
-          cat > local.properties <<EOF
-          sdk.dir=$ANDROID_SDK_ROOT
-          storeFile=${{ github.workspace }}/pwfb-keystore.jks
-          keyAlias=${{ secrets.KEY_ALIAS }}
-          keyPassword=${{ secrets.KEY_PASSWORD }}
-          storePassword=${{ secrets.STORE_PASSWORD }}
-          AdMobAPI_KEY=${{ secrets.ADMOB_API_KEY }}
-          EOF    
+          {
+            echo "sdk.dir=$ANDROID_SDK_ROOT"
+            echo "storeFile=$GITHUB_WORKSPACE/pwfb-keystore.jks"
+            echo "keyAlias=$KEY_ALIAS"
+            echo "keyPassword=$KEY_PASSWORD"
+            echo "storePassword=$STORE_PASSWORD"
+            echo "AdMobAPI_KEY=$ADMOB_API_KEY"
+          } > local.properties
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -69,6 +81,7 @@ jobs:
         with:
           name: pwfb_debug
           path: app/build/outputs/apk/debug/pwfb_debug.apk
+          retention-days: 7
 
       # Push일 때만 릴리즈 빌드 실행
       - name: Assemble Release
@@ -87,3 +100,4 @@ jobs:
         with:
           name: pwfb_release
           path: app/build/outputs/apk/release/pwfb_release.apk
+          retention-days: 7

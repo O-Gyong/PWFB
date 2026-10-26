@@ -1,14 +1,11 @@
 package com.pwfb.ui
 
-import android.Manifest
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.MotionEvent
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import com.google.android.gms.ads.AdRequest
-import androidx.core.content.ContextCompat
 import com.pwfb.R
 import com.pwfb.base.BaseActivity
 import com.pwfb.databinding.ActivityMainBinding
@@ -52,15 +49,6 @@ class MainActivity : BaseActivity() {
                 }
             }
             true
-        }
-
-        requestPermission()
-    }
-
-    private fun requestPermission() {
-        val permissionArray = arrayOf(Manifest.permission.INTERNET)
-        if(permissionArray.all { ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_DENIED }) {
-            requestPermissions(permissionArray, 1000)
         }
     }
 
