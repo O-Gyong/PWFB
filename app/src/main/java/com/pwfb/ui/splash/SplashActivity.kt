@@ -33,6 +33,10 @@ import kotlinx.coroutines.launch
 @SuppressLint("CustomSplashScreen")
 @AndroidEntryPoint
 class SplashActivity: BaseActivity() {
+    companion object {
+        private const val UPDATE_REQUEST_CODE = 100
+    }
+
     private val viewModel: SplashViewModel by viewModels()
     private val appUpdateManager: AppUpdateManager by lazy {
         AppUpdateManagerFactory.create(applicationContext)
@@ -135,7 +139,7 @@ class SplashActivity: BaseActivity() {
                         appUpdateInfo,
                         this@SplashActivity,
                         AppUpdateOptions.newBuilder(AppUpdateType.IMMEDIATE).build(),
-                        100
+                        UPDATE_REQUEST_CODE
                     )
                 } else {
                     intentLogin(intentType)
@@ -144,7 +148,17 @@ class SplashActivity: BaseActivity() {
             // PlayStore 통신 실패 (Ex- PlayStore에 앱 등록이 안 된 경우)
             .addOnFailureListener { e ->
                 Toast.makeText(this, "앱 업데이트 실패", Toast.LENGTH_SHORT).show()
+                intentLogin(intentType)
             }
+    }
+
+    @Suppress("DEPRECATION")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == UPDATE_REQUEST_CODE && resultCode != RESULT_OK) {
+            // 사용자가 업데이트를 취소하거나 실패한 경우 앱 진입이 막히지 않도록 진행
+            viewModel.firstInitObserve.value?.let { intentLogin(it) }
+        }
     }
 
     fun intentLogin(intentType: Boolean) {

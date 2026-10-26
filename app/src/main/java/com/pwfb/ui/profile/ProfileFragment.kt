@@ -169,8 +169,10 @@ class ProfileFragment : BaseFragment() {
                             return@collectLatest
                         }
 
-                        weightPref = it.toDouble()
-                        weight = it.toDouble()
+                        // 초기값("")이나 미설정 값("WeightNull")은 숫자가 아니므로 무시
+                        val savedWeight = it.toDoubleOrNull() ?: return@collectLatest
+                        weightPref = savedWeight
+                        weight = savedWeight
 
                         binding.tvIdealWeight.text = getString(
                             R.string.profile_weight,
@@ -187,6 +189,8 @@ class ProfileFragment : BaseFragment() {
                         if(it == DataStoreResult.SET_D_DAY) {
                             binding.btModify.isEnabled = false
                             binding.btModify.setTextColor(requireContext().getColor(R.color.c_949292))
+                            return@collectLatest
+                        } else if(it.isEmpty()) {
                             return@collectLatest
                         } else {
                             dDayPref = it

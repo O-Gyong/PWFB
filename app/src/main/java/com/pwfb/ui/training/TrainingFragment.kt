@@ -66,6 +66,9 @@ class TrainingFragment : BaseFragment() {
                             // todo
                             return@collectLatest
                         }
+                        if(it.isEmpty()) {
+                            return@collectLatest
+                        }
                         val datePref = it.substring(0..9)
                         val targetDate = SimpleDateFormat("yyyy.MM.dd").parse(datePref)!!.time
                         val today = Calendar.getInstance().time.time

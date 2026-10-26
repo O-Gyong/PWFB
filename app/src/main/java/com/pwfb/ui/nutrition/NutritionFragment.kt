@@ -63,6 +63,9 @@ class NutritionFragment : BaseFragment() {
                             // todo
                             return@collectLatest
                         }
+                        if(it.isEmpty()) {
+                            return@collectLatest
+                        }
                         val datePref = it.substring(0..9)
                         val targetDate = SimpleDateFormat("yyyy.MM.dd").parse(datePref)!!.time
                         val today = Calendar.getInstance().time.time
@@ -152,7 +155,7 @@ class NutritionFragment : BaseFragment() {
                         if(it == DataStoreResult.SET_DIETARY_FIBER) {
                             return@collectLatest
                         } else {
-                            binding.etCreatine.setText(it)
+                            binding.etDietaryFiber.setText(it)
                         }
                     }
                 }
@@ -242,7 +245,7 @@ class NutritionFragment : BaseFragment() {
             var handled = false
             if(action == EditorInfo.IME_ACTION_DONE) {
                 viewModel.setDietaryFiber(binding.etDietaryFiber.text.toString())
-                binding.etCreatine.setText(binding.etDietaryFiber.text.toString())
+                binding.etDietaryFiber.setText(binding.etDietaryFiber.text.toString())
                 hideKeyBoard()
                 handled = true
             }

@@ -53,8 +53,9 @@ class HomeFragment : BaseFragment() {
                             // todo
                             return@collectLatest
                         }
+                        // 초기값("")이나 미설정 값("WeightNull")은 숫자가 아니므로 무시
+                        kg = it.toDoubleOrNull() ?: return@collectLatest
                         binding.tvWeight.text = it + getString(R.string.kg)
-                        kg = it.toDouble()
                         viewModel.getDDay()
                     }
                 }

@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.inputmethod.InputMethodManager
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.core.widget.addTextChangedListener
 import com.pwfb.R
@@ -54,7 +55,12 @@ class WeightActivity: BaseActivity() {
          * Next 버튼 클릭
          */
         binding.btNext.setOnClickListener {
-            viewModel.setWeight(binding.etWeight.text.toString())
+            val weight = binding.etWeight.text.toString()
+            if((weight.toDoubleOrNull() ?: 0.0) <= 0.0) {
+                Toast.makeText(this, R.string.weight_invalid, Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            viewModel.setWeight(weight)
         }
 
         viewModel.weightObserve.observe(this) {
