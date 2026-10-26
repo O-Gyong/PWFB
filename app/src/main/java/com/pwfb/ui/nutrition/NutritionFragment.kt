@@ -20,8 +20,7 @@ import com.pwfb.ui.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Calendar
+import com.pwfb.util.calcDDay
 
 
 @AndroidEntryPoint
@@ -66,16 +65,12 @@ class NutritionFragment : BaseFragment() {
                         if(it.isEmpty()) {
                             return@collectLatest
                         }
-                        val datePref = it.substring(0..9)
-                        val targetDate = SimpleDateFormat("yyyy.MM.dd").parse(datePref)!!.time
-                        val today = Calendar.getInstance().time.time
-
-                        val dDay = (today - targetDate) / (60*60*24*1000)
+                        val dDay = calcDDay(it) ?: return@collectLatest
 
                         binding.tvDDay.text = "D$dDay"
                         binding.tvDate.text = it
 
-                        setTextDDay(dDay.toInt())
+                        setTextDDay(dDay)
                     }
                 }
 

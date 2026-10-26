@@ -26,14 +26,17 @@ import com.pwfb.util.ClearDecorator
 import com.pwfb.util.DayDisableDecorator
 import com.pwfb.util.SelectDecorator
 import com.pwfb.util.TodayDecorator
+import com.pwfb.util.calcDDay
+import com.pwfb.util.formatTimeDisplay
+import com.pwfb.util.formatTimeStore
 import com.pwfb.util.getCurrentToday
+import com.pwfb.util.getWeekKor
+import com.pwfb.util.parseStoredTime
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.threeten.bp.format.DateTimeFormatter
 import java.io.File
-import java.text.SimpleDateFormat
-import java.time.LocalDate
 import java.util.Calendar
 
 
@@ -197,7 +200,7 @@ class ProfileFragment : BaseFragment() {
                             datePref = it.substring(0..9)
                             setDDay()
 
-                            setTime(it.substring(14..18))
+                            if(it.length >= 19) setTime(it.substring(14, 19))
 
                             val targetCalendarDay = CalendarDay.from(org.threeten.bp.LocalDate.parse(
                                 datePref,
@@ -262,41 +265,21 @@ class ProfileFragment : BaseFragment() {
             val month = if(date.month<10) "0${date.month}" else "${date.month}"
             val day = if(date.day<10) "0${date.day}" else "${date.day}"
 
-            dDayPref = "${date.year}.$month.$day${getWeek(date)}"
+            dDayPref = "${date.year}.$month.$day${getWeekKor(date.year, date.month, date.day)}"
 
             setDDay()
         }
     }
 
-    private fun getWeek(date: CalendarDay):String {
-        return when(LocalDate.of(date.year, date.month, date.day).dayOfWeek.value) {
-            1 -> "(월)"
-            2 -> "(화)"
-            3 -> "(수)"
-            4 -> "(목)"
-            5 -> "(금)"
-            6 -> "(토)"
-            7 -> "(일)"
-            else -> ""
-        }
-    }
-
     private fun setTime(time: String) {
-        val hourPref = time.substring(0..1)
-        val minutePref = time.substring(3..4)
+        val (hour, minute) = parseStoredTime(time) ?: return
 
-        val amPm = if(hourPref[0]=='1' && hourPref[1].code>2) "오후" else "오전"
-        val hour = if(amPm == "오후") (hourPref.toInt()-12).toString() else hourPref
-
-        binding.btTime.text = "$amPm $hour:$minutePref"
-        timePref = "$hourPref:$minutePref⏳"
+        binding.btTime.text = formatTimeDisplay(hour, minute)
+        timePref = formatTimeStore(hour, minute)
     }
 
     private fun setDDay() {
-        val targetDate = SimpleDateFormat("yyyy.MM.dd").parse(dDayPref)!!.time
-        val today = Calendar.getInstance().time.time
-
-        val dDay = (today - targetDate) / (60*60*24*1000)
+        val dDay = calcDDay(dDayPref) ?: return
         binding.tvDDay.text = "D$dDay"
     }
 
@@ -304,21 +287,8 @@ class ProfileFragment : BaseFragment() {
         val cal = Calendar.getInstance()
 
         val timeSetListener = TimePickerDialog.OnTimeSetListener { _, pHour, pMinute ->
-            cal.set(Calendar.HOUR_OF_DAY, pHour)
-            cal.set(Calendar.MINUTE, pMinute)
-
-            val amPm = if(pHour < 12) "오전" else "오후"
-
-            val hour = if(amPm == "오후") {
-                if((pHour-12)<10) "0${(pHour-12)}" else "${(pHour-12)}"
-            } else {
-                if(pHour<10) "0$pHour" else "$pHour"
-            }
-
-            val minute = if(pMinute<10) "0$pMinute" else "$pMinute"
-
-            binding.btTime.text = "$amPm $hour:$minute"
-            timePref = if(amPm == "오후") "$pHour:$minute⏳" else "$hour:$minute⏳"
+            binding.btTime.text = formatTimeDisplay(pHour, pMinute)
+            timePref = formatTimeStore(pHour, pMinute)
         }
 
         val timePickerDialog = TimePickerDialog(

@@ -1,6 +1,5 @@
 package com.pwfb.ui.setting
 
-import android.annotation.SuppressLint
 import android.app.TimePickerDialog
 import android.content.Intent
 import android.os.Bundle
@@ -19,9 +18,11 @@ import com.pwfb.util.ClearDecorator
 import com.pwfb.util.DayDisableDecorator
 import com.pwfb.util.SelectDecorator
 import com.pwfb.util.TodayDecorator
+import com.pwfb.util.formatTimeDisplay
+import com.pwfb.util.formatTimeStore
+import com.pwfb.util.getWeekKor
 import dagger.hilt.android.AndroidEntryPoint
-import java.time.LocalDate
-import java.time.LocalDateTime
+import java.time.LocalTime
 import java.util.Calendar
 
 
@@ -112,26 +113,15 @@ class DayActivity : BaseActivity() {
             val month = if(date.month<10) "0${date.month}" else "${date.month}"
             val day = if(date.day<10) "0${date.day}" else "${date.day}"
 
-            datePref = "${date.year}.$month.$day${getWeek(date)}"
+            datePref = "${date.year}.$month.$day${getWeekKor(date.year, date.month, date.day)}"
         }
     }
 
     private fun getLocalTime() {
-        val localTime = LocalDateTime.now().toLocalTime()
+        val localTime = LocalTime.now()
 
-        val amPm = if(localTime.hour < 12) "오전" else "오후"
-
-        val hour = if(amPm == "오후") {
-            if((localTime.hour-12)<10) "0${(localTime.hour-12)}" else "${(localTime.hour-12)}"
-        } else {
-            if(localTime.hour<10) "0${localTime.hour}" else "${localTime.hour}"
-        }
-
-        val minute = if(localTime.minute<10) "0${localTime.minute}" else "${localTime.minute}"
-
-        @SuppressLint("SetTextI18n")
-        binding.btTime.text = "$amPm $hour:$minute"
-        timePref = if(amPm == "오후") "${localTime.hour}:$minute⏳" else "$hour:$minute⏳"
+        binding.btTime.text = formatTimeDisplay(localTime.hour, localTime.minute)
+        timePref = formatTimeStore(localTime.hour, localTime.minute)
     }
 
 
@@ -139,22 +129,8 @@ class DayActivity : BaseActivity() {
         val cal = Calendar.getInstance()
 
         val timeSetListener = TimePickerDialog.OnTimeSetListener { _, pHour, pMinute ->
-            cal.set(Calendar.HOUR_OF_DAY, pHour)
-            cal.set(Calendar.MINUTE, pMinute)
-
-            val amPm = if(pHour < 12) "오전" else "오후"
-
-            val hour = if(amPm == "오후") {
-                if((pHour-12)<10) "0${(pHour-12)}" else "${(pHour-12)}"
-            } else {
-                if(pHour<10) "0$pHour" else "$pHour"
-            }
-
-            val minute = if(pMinute<10) "0$pMinute" else "$pMinute"
-
-            @SuppressLint("SetTextI18n")
-            binding.btTime.text = "$amPm $hour:$minute"
-            timePref = "$hour:$minute⏳"
+            binding.btTime.text = formatTimeDisplay(pHour, pMinute)
+            timePref = formatTimeStore(pHour, pMinute)
         }
 
         val timePickerDialog = TimePickerDialog(
@@ -168,18 +144,5 @@ class DayActivity : BaseActivity() {
         timePickerDialog.setButton(TimePickerDialog.BUTTON_POSITIVE, getString(R.string.confirm), timePickerDialog)
         timePickerDialog.setButton(TimePickerDialog.BUTTON_NEGATIVE, getString(R.string.cancel), timePickerDialog)
         timePickerDialog.show()
-    }
-
-    private fun getWeek(date: CalendarDay):String {
-        return when(LocalDate.of(date.year, date.month, date.day).dayOfWeek.value) {
-            1 -> "(월)"
-            2 -> "(화)"
-            3 -> "(수)"
-            4 -> "(목)"
-            5 -> "(금)"
-            6 -> "(토)"
-            7 -> "(일)"
-            else -> ""
-        }
     }
 }

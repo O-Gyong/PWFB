@@ -18,8 +18,7 @@ import com.pwfb.ui.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Calendar
+import com.pwfb.util.calcDDay
 
 
 @AndroidEntryPoint
@@ -70,18 +69,14 @@ class HomeFragment : BaseFragment() {
                             // todo
                             return@collectLatest
                         }
-                        val datePref = it.substring(0..9)
-                        val targetDate = SimpleDateFormat("yyyy.MM.dd").parse(datePref)!!.time
-                        val today = Calendar.getInstance().time.time
-
-                        val dDay = (today - targetDate) / (60*60*24*1000)
+                        val dDay = calcDDay(it) ?: return@collectLatest
 
                         binding.tvDDay.text = "D$dDay"
                         binding.tvDate.text = it
 
-                        binding.lvNutrition.adapter = ListAdapter(requireContext(), nutritionEntityLists, kg, dDay.toInt())
+                        binding.lvNutrition.adapter = ListAdapter(requireContext(), nutritionEntityLists, kg, dDay)
 
-                        binding.tvTraining.text = when(dDay.toInt()) {
+                        binding.tvTraining.text = when(dDay) {
                             -6 -> {
                                 getString(R.string.home_training_day_6)
                             }
@@ -102,7 +97,7 @@ class HomeFragment : BaseFragment() {
                             }
                         }
 
-                        binding.tvPeakWeekStrategy.text = when(dDay.toInt()) {
+                        binding.tvPeakWeekStrategy.text = when(dDay) {
                             -7 -> {
                                 getString(R.string.re_feed_day)
                             }
