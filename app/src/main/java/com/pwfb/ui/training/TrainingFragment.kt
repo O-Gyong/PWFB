@@ -14,8 +14,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.pwfb.R
 import com.pwfb.base.BaseFragment
-import com.pwfb.common.DataStoreResult
 import com.pwfb.databinding.FragmentTrainingBinding
+import com.pwfb.domain.entity.PrefKey
 import com.pwfb.ui.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
@@ -37,14 +37,11 @@ class TrainingFragment : BaseFragment() {
         binding = FragmentTrainingBinding.inflate(layoutInflater)
 
         viewModelObserve()
-        viewModel.getDDay()
-        viewModel.getTrainingProgram()
 
         binding.etTrainingProgram.setOnEditorActionListener { _, action, _ ->
             var handled = false
             if(action == EditorInfo.IME_ACTION_DONE) {
-                viewModel.setTrainingProgram(binding.etTrainingProgram.text.toString())
-                binding.etTrainingProgram.setText(binding.etTrainingProgram.text.toString())
+                viewModel.save(PrefKey.TRAINING_PROGRAM, binding.etTrainingProgram.text.toString())
                 val inputMethodManager = requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                 inputMethodManager.hideSoftInputFromWindow(requireActivity().currentFocus?.windowToken, 0)
                 handled = true
@@ -55,19 +52,12 @@ class TrainingFragment : BaseFragment() {
         return binding.root
     }
 
-    @SuppressLint("SimpleDateFormat", "SetTextI18n")
+    @SuppressLint("SetTextI18n")
     private fun viewModelObserve() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    viewModel.dDayObserve.collectLatest {
-                        if(it == DataStoreResult.SET_D_DAY) {
-                            // todo
-                            return@collectLatest
-                        }
-                        if(it.isEmpty()) {
-                            return@collectLatest
-                        }
+                    viewModel.state(PrefKey.D_DAY).collectLatest {
                         val dDay = calcDDay(it) ?: return@collectLatest
 
                         binding.tvDDay.text = "D$dDay"
@@ -77,11 +67,8 @@ class TrainingFragment : BaseFragment() {
                 }
 
                 launch {
-                    viewModel.trainingProgramObserve.collectLatest {
-                        if(it == DataStoreResult.SET_TRAINING_PROGRAM) {
-                            // todo
-                            return@collectLatest
-                        } else {
+                    viewModel.state(PrefKey.TRAINING_PROGRAM).collectLatest {
+                        if (binding.etTrainingProgram.text.toString() != it) {
                             binding.etTrainingProgram.setText(it)
                         }
                     }

@@ -10,7 +10,6 @@ import androidx.activity.viewModels
 import androidx.core.widget.addTextChangedListener
 import com.pwfb.R
 import com.pwfb.base.BaseActivity
-import com.pwfb.common.DataStoreResult
 import com.pwfb.common.DataStoreResult.RESULT_SUCCESS
 import com.pwfb.databinding.ActivityWeightBinding
 import com.pwfb.domain.entity.PwfbResultEntity

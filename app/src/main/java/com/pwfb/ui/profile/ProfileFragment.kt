@@ -18,9 +18,9 @@ import com.prolificinteractive.materialcalendarview.format.ArrayWeekDayFormatter
 import com.prolificinteractive.materialcalendarview.format.MonthArrayTitleFormatter
 import com.pwfb.R
 import com.pwfb.base.BaseFragment
-import com.pwfb.common.DataStoreResult
 import com.pwfb.common.Firebase
 import com.pwfb.databinding.FragmentProfileBinding
+import com.pwfb.domain.entity.PrefKey
 import com.pwfb.ui.MainViewModel
 import com.pwfb.util.ClearDecorator
 import com.pwfb.util.DayDisableDecorator
@@ -76,10 +76,6 @@ class ProfileFragment : BaseFragment() {
     }
 
     private fun init() {
-        viewModel.getName()
-        viewModel.getWeight()
-        viewModel.getDDay()
-
         infoDialogView = layoutInflater.inflate(R.layout.dialog_info, null)
         infoDialog = BottomSheetDialog(requireContext())
         infoDialog.setContentView(infoDialogView!!)
@@ -87,8 +83,8 @@ class ProfileFragment : BaseFragment() {
 
     private fun setOnClickListener() {
         binding.btModify.setOnClickListener {
-            viewModel.setDDay("$dDayPref $timePref")
-            viewModel.setWeight(weight.toString())
+            viewModel.save(PrefKey.D_DAY, "$dDayPref $timePref")
+            viewModel.save(PrefKey.WEIGHT, weight.toString())
         }
 
         binding.btTime.setOnClickListener {
@@ -154,24 +150,13 @@ class ProfileFragment : BaseFragment() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    viewModel.nameObserve.collectLatest {
-                        if(it == DataStoreResult.SET_NAME) {
-                            // todo
-                            return@collectLatest
-                        }
+                    viewModel.state(PrefKey.NAME).collectLatest {
                         binding.tvName.text = it
                     }
                 }
 
                 launch {
-                    viewModel.weightObserve.collectLatest {
-                        if(it == DataStoreResult.SET_WEIGHT) {
-                            binding.btModify.isEnabled = false
-                            binding.btModify.setTextColor(requireContext().getColor(R.color.c_949292))
-                            viewModel.getWeight()
-                            return@collectLatest
-                        }
-
+                    viewModel.state(PrefKey.WEIGHT).collectLatest {
                         // 초기값("")이나 미설정 값("WeightNull")은 숫자가 아니므로 무시
                         val savedWeight = it.toDoubleOrNull() ?: return@collectLatest
                         weightPref = savedWeight
@@ -188,30 +173,35 @@ class ProfileFragment : BaseFragment() {
                 }
 
                 launch {
-                    viewModel.dDayObserve.collectLatest {
-                        if(it == DataStoreResult.SET_D_DAY) {
+                    viewModel.state(PrefKey.D_DAY).collectLatest {
+                        if(it.isEmpty()) {
+                            return@collectLatest
+                        }
+                        dDayPref = it
+                        datePref = it.substring(0..9)
+                        setDDay()
+
+                        if(it.length >= 19) setTime(it.substring(14, 19))
+
+                        val targetCalendarDay = CalendarDay.from(org.threeten.bp.LocalDate.parse(
+                            datePref,
+                            DateTimeFormatter.ofPattern("yyyy.MM.dd"))
+                        )
+                        val targetDecorator = SelectDecorator(
+                            requireContext().getColor(R.color.c_caab3f),
+                            targetCalendarDay
+                        )
+                        binding.cvCalendar.selectedDate = targetCalendarDay
+                        binding.cvCalendar.addDecorator(targetDecorator)
+                    }
+                }
+
+                // 체중/D-Day 저장에 성공하면 수정 버튼 비활성화
+                launch {
+                    viewModel.saveResult.collect {
+                        if(it.success && (it.key == PrefKey.WEIGHT || it.key == PrefKey.D_DAY)) {
                             binding.btModify.isEnabled = false
                             binding.btModify.setTextColor(requireContext().getColor(R.color.c_949292))
-                            return@collectLatest
-                        } else if(it.isEmpty()) {
-                            return@collectLatest
-                        } else {
-                            dDayPref = it
-                            datePref = it.substring(0..9)
-                            setDDay()
-
-                            if(it.length >= 19) setTime(it.substring(14, 19))
-
-                            val targetCalendarDay = CalendarDay.from(org.threeten.bp.LocalDate.parse(
-                                datePref,
-                                DateTimeFormatter.ofPattern("yyyy.MM.dd"))
-                            )
-                            val targetDecorator = SelectDecorator(
-                                requireContext().getColor(R.color.c_caab3f),
-                                targetCalendarDay
-                            )
-                            binding.cvCalendar.selectedDate = targetCalendarDay
-                            binding.cvCalendar.addDecorator(targetDecorator)
                         }
                     }
                 }

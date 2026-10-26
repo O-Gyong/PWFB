@@ -30,7 +30,7 @@ class SplashViewModel @Inject constructor(
 
      fun getFirstInit() {
         viewModelScope.launch {
-            _firstInitObserve.value = prefUseCase.getFirstInit().first()
+            _firstInitObserve.value = prefUseCase.observeFirstInit().first()
         }
     }
 }

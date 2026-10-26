@@ -11,12 +11,13 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.pwfb.R
 import com.pwfb.base.BaseFragment
-import com.pwfb.common.DataStoreResult
 import com.pwfb.common.NutritionObject.nutritionEntityLists
 import com.pwfb.databinding.FragmentHomeBinding
+import com.pwfb.domain.entity.PrefKey
 import com.pwfb.ui.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import com.pwfb.util.calcDDay
 
@@ -35,44 +36,28 @@ class HomeFragment : BaseFragment() {
         binding = FragmentHomeBinding.inflate(layoutInflater)
 
         viewModelObserve()
-        viewModel.getWeight()
-
-
 
         return binding.root
     }
 
-    @SuppressLint("SimpleDateFormat", "SetTextI18n")
+    @SuppressLint("SetTextI18n")
     private fun viewModelObserve() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
+                // 영양 섭취량은 체중(kg)에 의존하므로 체중과 D-Day가 모두 준비된 뒤에 그린다
                 launch {
-                    viewModel.weightObserve.collectLatest {
-                        if(it == DataStoreResult.SET_WEIGHT){
-                            // todo
-                            return@collectLatest
-                        }
+                    combine(
+                        viewModel.state(PrefKey.WEIGHT),
+                        viewModel.state(PrefKey.D_DAY)
+                    ) { weight, dDayText -> weight to dDayText }.collectLatest { (weight, dDayText) ->
                         // 초기값("")이나 미설정 값("WeightNull")은 숫자가 아니므로 무시
-                        kg = it.toDoubleOrNull() ?: return@collectLatest
-                        binding.tvWeight.text = it + getString(R.string.kg)
-                        viewModel.getDDay()
-                    }
-                }
+                        kg = weight.toDoubleOrNull() ?: return@collectLatest
+                        binding.tvWeight.text = weight + getString(R.string.kg)
 
-                launch {
-                    viewModel.dDayObserve.collectLatest {
-                        if(it == DataStoreResult.SET_D_DAY) {
-                            // todo
-                            return@collectLatest
-                        }
-                        if(it.isEmpty()) {
-                            // todo
-                            return@collectLatest
-                        }
-                        val dDay = calcDDay(it) ?: return@collectLatest
+                        val dDay = calcDDay(dDayText) ?: return@collectLatest
 
                         binding.tvDDay.text = "D$dDay"
-                        binding.tvDate.text = it
+                        binding.tvDate.text = dDayText
 
                         binding.lvNutrition.adapter = ListAdapter(requireContext(), nutritionEntityLists, kg, dDay)
 
