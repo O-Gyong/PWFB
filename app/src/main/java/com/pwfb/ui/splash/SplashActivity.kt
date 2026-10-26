@@ -156,8 +156,7 @@ class SplashActivity: BaseActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == UPDATE_REQUEST_CODE && resultCode != RESULT_OK) {
-            // 사용자가 업데이트를 취소하거나 실패한 경우 앱 진입이 막히지 않도록 진행
-            viewModel.firstInitObserve.value?.let { intentLogin(it) }
+            finish() // 업데이트 강제: 취소하거나 실패하면 앱을 종료
         }
     }
 
