@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
+import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -27,7 +28,8 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class NutritionFragment : BaseFragment() {
 
-    private lateinit var binding: FragmentNutritionBinding
+    private var _binding: FragmentNutritionBinding? = null
+    private val binding get() = _binding!!
     private val viewModel: MainViewModel by viewModels()
 
     override fun onCreateView(
@@ -35,12 +37,21 @@ class NutritionFragment : BaseFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentNutritionBinding.inflate(layoutInflater)
+        _binding = FragmentNutritionBinding.inflate(inflater, container, false)
 
-        viewModelObserve()
-        setPref()
 
         return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        viewModelObserve()
+        setPref()
+    }
+
+    override fun onDestroyView() {
+        _binding = null
+        super.onDestroyView()
     }
 
     /**
@@ -59,8 +70,8 @@ class NutritionFragment : BaseFragment() {
 
     @SuppressLint("SetTextI18n")
     private fun viewModelObserve() {
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     viewModel.state(PrefKey.D_DAY).collectLatest {
                         val dDay = calcDDay(it) ?: return@collectLatest
@@ -69,6 +80,15 @@ class NutritionFragment : BaseFragment() {
                         binding.tvDate.text = it
 
                         setTextDDay(dDay)
+                    }
+                }
+
+                // 저장 실패 시 사용자에게 알림
+                launch {
+                    viewModel.saveResult.collect {
+                        if (!it.success) {
+                            Toast.makeText(requireContext(), R.string.save_failed, Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
 

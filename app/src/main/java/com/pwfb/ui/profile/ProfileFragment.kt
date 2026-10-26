@@ -8,11 +8,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.annotation.StringRes
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.firebase.installations.FirebaseInstallations
 import com.prolificinteractive.materialcalendarview.CalendarDay
 import com.prolificinteractive.materialcalendarview.format.ArrayWeekDayFormatter
 import com.prolificinteractive.materialcalendarview.format.MonthArrayTitleFormatter
@@ -44,7 +46,8 @@ import java.util.Calendar
 @SuppressLint("SimpleDateFormat", "SetTextI18n", "InflateParams")
 class ProfileFragment : BaseFragment() {
 
-    private lateinit var binding: FragmentProfileBinding
+    private var _binding: FragmentProfileBinding? = null
+    private val binding get() = _binding!!
     private val viewModel: MainViewModel by viewModels()
 
     private var dDayPref = ""
@@ -53,32 +56,38 @@ class ProfileFragment : BaseFragment() {
     private var weightPref = 0.0
     private var weight = 0.0
 
-    private var infoDialogView: View? = null
-    private lateinit var infoDialog: BottomSheetDialog
-    private val strategyDialog = StrategyDialogFragment()
-
-    private var file: File? = null
-    private var filePath: String = ""
+    private var infoDialog: BottomSheetDialog? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentProfileBinding.inflate(layoutInflater)
+        _binding = FragmentProfileBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         setOnClickListener()
         setCalendarView()
         viewModelObserve()
 
         init()
-        return binding.root
+    }
+
+    override fun onDestroyView() {
+        infoDialog?.dismiss()
+        infoDialog = null
+        _binding = null
+        super.onDestroyView()
     }
 
     private fun init() {
-        infoDialogView = layoutInflater.inflate(R.layout.dialog_info, null)
-        infoDialog = BottomSheetDialog(requireContext())
-        infoDialog.setContentView(infoDialogView!!)
+        infoDialog = BottomSheetDialog(requireContext()).apply {
+            setContentView(layoutInflater.inflate(R.layout.dialog_info, null))
+        }
     }
 
     private fun setOnClickListener() {
@@ -104,51 +113,21 @@ class ProfileFragment : BaseFragment() {
         }
 
         binding.clPwfbInformation.setOnClickListener {
-            infoDialog.show()
+            infoDialog?.show()
         }
 
         binding.clTheDayStrategy.setOnClickListener {
-            strategyDialog.show(activity?.supportFragmentManager!!, strategyDialog.tag)
+            StrategyDialogFragment().show(childFragmentManager, "strategy")
         }
 
         binding.clLogSend.setOnClickListener {
-            viewModel.setUploadFile()
+            viewModel.requestLogUpload()
         }
     }
 
     private fun viewModelObserve() {
-        viewModel.logFile.observe(viewLifecycleOwner) {
-            if(it == null) return@observe
-
-            try {
-                file = it
-                filePath = "logs/${getCurrentToday()}/${file?.name}"
-
-                Firebase.firebaseReference
-                    .child(filePath)
-                    .putFile(Uri.fromFile(file))
-                    .addOnProgressListener {
-                        Toast.makeText(requireContext(), "로그 전송 중...", Toast.LENGTH_SHORT).show()
-                    }
-                    .addOnCompleteListener {
-                        Toast.makeText(requireContext(), "로그 전송 완료", Toast.LENGTH_SHORT).show()
-                    }
-                    .addOnFailureListener {
-                        Toast.makeText(requireContext(), "로그 전송 실패", Toast.LENGTH_SHORT).show()
-                    }
-            } catch (e: Exception) {
-                // 전송할 파일이 없는 경우
-                if (e.cause == null && e.message == "file") {
-                    Toast.makeText(requireContext(), "전송할 로그가 없음.", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(requireContext(), "로그 전송 실패", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-
-
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     viewModel.state(PrefKey.NAME).collectLatest {
                         binding.tvName.text = it
@@ -196,18 +175,57 @@ class ProfileFragment : BaseFragment() {
                     }
                 }
 
-                // 체중/D-Day 저장에 성공하면 수정 버튼 비활성화
+                // 체중/D-Day 저장에 성공하면 수정 버튼 비활성화, 실패하면 사용자에게 알림
                 launch {
                     viewModel.saveResult.collect {
-                        if(it.success && (it.key == PrefKey.WEIGHT || it.key == PrefKey.D_DAY)) {
+                        if(!it.success) {
+                            showToast(R.string.save_failed)
+                        } else if(it.key == PrefKey.WEIGHT || it.key == PrefKey.D_DAY) {
                             binding.btModify.isEnabled = false
                             binding.btModify.setTextColor(requireContext().getColor(R.color.c_949292))
                         }
                     }
                 }
+
+                launch {
+                    viewModel.logUpload.collect { uploadLog(it) }
+                }
             }
 
         }
+    }
+
+    /**
+     * 오늘 로그 파일을 Firebase Storage로 전송한다. file이 null이면 전송할 로그가 없는 것.
+     * 같은 날 여러 사용자가 올려도 덮어쓰지 않도록 앱 설치 ID로 파일명을 구분한다.
+     */
+    private fun uploadLog(file: File?) {
+        if(file == null) {
+            showToast(R.string.log_empty)
+            return
+        }
+
+        showToast(R.string.log_sending)
+        FirebaseInstallations.getInstance().id.addOnCompleteListener { task ->
+            val name = if(task.isSuccessful) task.result else "unknown_${System.currentTimeMillis()}"
+            try {
+                Firebase.firebaseReference
+                    .child("logs/${getCurrentToday()}/$name.txt")
+                    .putFile(Uri.fromFile(file))
+                    .addOnSuccessListener { showToast(R.string.log_send_success) }
+                    .addOnFailureListener { showToast(R.string.log_send_fail) }
+            } catch (e: Exception) {
+                showToast(R.string.log_send_fail)
+            }
+        }
+    }
+
+    /**
+     * 전송 결과처럼 화면이 사라진 뒤에 호출될 수 있는 콜백에서도 안전하게 토스트를 띄운다.
+     */
+    private fun showToast(@StringRes messageRes: Int) {
+        val context = context ?: return
+        Toast.makeText(context.applicationContext, messageRes, Toast.LENGTH_SHORT).show()
     }
 
     private fun setCalendarView() {

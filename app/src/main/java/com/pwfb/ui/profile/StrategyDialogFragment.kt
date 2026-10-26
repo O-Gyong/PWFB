@@ -11,7 +11,8 @@ import com.pwfb.databinding.DialogStrategyBinding
 
 
 class StrategyDialogFragment: BottomSheetDialogFragment() {
-    private lateinit var binding: DialogStrategyBinding
+    private var _binding: DialogStrategyBinding? = null
+    private val binding get() = _binding!!
 
     // yes=true, no=false
     private var isFull: Boolean? = null
@@ -23,7 +24,7 @@ class StrategyDialogFragment: BottomSheetDialogFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = DialogStrategyBinding.inflate(layoutInflater)
+        _binding = DialogStrategyBinding.inflate(inflater, container, false)
         setOnClickListener()
         return binding.root
     }
@@ -104,9 +105,13 @@ class StrategyDialogFragment: BottomSheetDialogFragment() {
         }
     }
 
+    override fun onDestroyView() {
+        _binding = null
+        super.onDestroyView()
+    }
+
     private fun getWindowHeight(): Float {
-        val display = requireContext().resources?.displayMetrics
-        val deviceHeight = display?.density?.let { display.heightPixels.div(it) }
-        return deviceHeight!!*0.5f
+        val display = resources.displayMetrics
+        return display.heightPixels / display.density * 0.5f
     }
 }

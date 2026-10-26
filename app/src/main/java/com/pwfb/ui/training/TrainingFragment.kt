@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -26,7 +27,8 @@ import com.pwfb.util.calcDDay
 @AndroidEntryPoint
 class TrainingFragment : BaseFragment() {
 
-    private lateinit var binding: FragmentTrainingBinding
+    private var _binding: FragmentTrainingBinding? = null
+    private val binding get() = _binding!!
     private val viewModel: MainViewModel by viewModels()
 
     override fun onCreateView(
@@ -34,9 +36,8 @@ class TrainingFragment : BaseFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentTrainingBinding.inflate(layoutInflater)
+        _binding = FragmentTrainingBinding.inflate(inflater, container, false)
 
-        viewModelObserve()
 
         binding.etTrainingProgram.setOnEditorActionListener { _, action, _ ->
             var handled = false
@@ -52,10 +53,20 @@ class TrainingFragment : BaseFragment() {
         return binding.root
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        viewModelObserve()
+    }
+
+    override fun onDestroyView() {
+        _binding = null
+        super.onDestroyView()
+    }
+
     @SuppressLint("SetTextI18n")
     private fun viewModelObserve() {
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
                     viewModel.state(PrefKey.D_DAY).collectLatest {
                         val dDay = calcDDay(it) ?: return@collectLatest
@@ -63,6 +74,15 @@ class TrainingFragment : BaseFragment() {
                         binding.tvDDay.text = "D$dDay"
                         binding.tvDate.text = it
                         setTextDDay(dDay)
+                    }
+                }
+
+                // 저장 실패 시 사용자에게 알림
+                launch {
+                    viewModel.saveResult.collect {
+                        if (!it.success) {
+                            Toast.makeText(requireContext(), R.string.save_failed, Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
 

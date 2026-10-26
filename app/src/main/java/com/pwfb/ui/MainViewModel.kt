@@ -1,6 +1,5 @@
 package com.pwfb.ui
 
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pwfb.domain.entity.PrefKey
@@ -9,6 +8,7 @@ import com.pwfb.domain.usecase.PrefUseCase
 import com.pwfb.domain.usecase.file.CreateLogFileUseCase
 import com.pwfb.domain.usecase.file.GetLogFileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import javax.inject.Inject
 
@@ -44,11 +45,14 @@ class MainViewModel @Inject constructor(
     private val _saveResult = MutableSharedFlow<SaveResult>(extraBufferCapacity = 8)
     val saveResult: SharedFlow<SaveResult> = _saveResult.asSharedFlow()
 
-    var logFile: MutableLiveData<File?> = MutableLiveData()
-        private set
+    // 업로드할 로그 파일. 일회성 이벤트이므로 화면이 재생성되어도 다시 전달되지 않는다. 파일이 없으면 null.
+    private val _logUpload = MutableSharedFlow<File?>(extraBufferCapacity = 1)
+    val logUpload: SharedFlow<File?> = _logUpload.asSharedFlow()
 
-    fun setUploadFile() {
-        logFile.value = getLogFileUseCase()
+    fun requestLogUpload() {
+        viewModelScope.launch {
+            _logUpload.emit(withContext(Dispatchers.IO) { getLogFileUseCase() })
+        }
     }
 
     /**

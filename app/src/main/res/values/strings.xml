@@ -65,6 +65,11 @@
     <string name="kr_empty_stomach_weight">공복 체중</string>
     <string name="kg">Kg</string>
     <string name="weight_invalid">올바른 체중을 입력해주세요.</string>
+    <string name="save_failed">저장에 실패했습니다. 다시 시도해주세요.</string>
+    <string name="log_empty">전송할 로그가 없습니다.</string>
+    <string name="log_sending">로그 전송 중...</string>
+    <string name="log_send_success">로그 전송 완료</string>
+    <string name="log_send_fail">로그 전송 실패</string>
 
     <string name="go">Go</string>
     <string name="time">시간</string>

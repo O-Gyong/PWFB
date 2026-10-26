@@ -25,7 +25,8 @@ import com.pwfb.util.calcDDay
 @AndroidEntryPoint
 class HomeFragment : BaseFragment() {
 
-    private lateinit var binding: FragmentHomeBinding
+    private var _binding: FragmentHomeBinding? = null
+    private val binding get() = _binding!!
     private val viewModel: MainViewModel by viewModels()
     private var kg = 0.0
     override fun onCreateView(
@@ -33,17 +34,24 @@ class HomeFragment : BaseFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentHomeBinding.inflate(layoutInflater)
-
-        viewModelObserve()
-
+        _binding = FragmentHomeBinding.inflate(inflater, container, false)
         return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        viewModelObserve()
+    }
+
+    override fun onDestroyView() {
+        _binding = null
+        super.onDestroyView()
     }
 
     @SuppressLint("SetTextI18n")
     private fun viewModelObserve() {
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 // 영양 섭취량은 체중(kg)에 의존하므로 체중과 D-Day가 모두 준비된 뒤에 그린다
                 launch {
                     combine(
