@@ -91,8 +91,8 @@ android {
     }
 
     lint {
-        baseline = file("lint-baseline.xml")
-        abortOnError = false
+        // baseline 없이 운영한다. 경고는 CI 로그로 확인하고, 오류만 빌드를 막는다.
+        abortOnError = true
         checkReleaseBuilds = false
     }
 }
@@ -142,6 +142,7 @@ dependencies {
     implementation(libs.app.update.ktx)
 
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }

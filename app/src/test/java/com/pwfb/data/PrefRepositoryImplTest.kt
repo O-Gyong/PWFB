@@ -4,7 +4,6 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.stringPreferencesKey
-import com.pwfb.common.DataStoreResult
 import com.pwfb.domain.entity.PrefKey
 import com.pwfb.domain.entity.PwfbResultEntity
 import kotlinx.coroutines.flow.first
@@ -34,8 +33,8 @@ class PrefRepositoryImplTest {
 
     @Test
     fun observe_returnsDefaultWhenNothingSaved() = runBlocking {
-        assertEquals("NameNull", repository.observe(PrefKey.NAME).first())
-        assertEquals("WeightNull", repository.observe(PrefKey.WEIGHT).first())
+        assertEquals("", repository.observe(PrefKey.NAME).first())
+        assertEquals("", repository.observe(PrefKey.WEIGHT).first())
         assertEquals("", repository.observe(PrefKey.D_DAY).first())
         assertEquals("", repository.observe(PrefKey.CARBOHYDRATE).first())
     }
@@ -44,7 +43,7 @@ class PrefRepositoryImplTest {
     fun set_thenObserve_returnsSavedValue() = runBlocking {
         val result = repository.set(PrefKey.WEIGHT, "72.5")
 
-        assertEquals(PwfbResultEntity.Success(DataStoreResult.RESULT_SUCCESS), result)
+        assertEquals(PwfbResultEntity.Success, result)
         assertEquals("72.5", repository.observe(PrefKey.WEIGHT).first())
     }
 
@@ -92,7 +91,7 @@ class PrefRepositoryImplTest {
                 produceFile = { File(tempFolder.root, "legacy_$legacyName.preferences_pb") }
             )
             val result = PrefRepositoryImpl(store).set(key, "v-$legacyName")
-            assertEquals("$key: $result", PwfbResultEntity.Success(DataStoreResult.RESULT_SUCCESS), result)
+            assertEquals("$key: $result", PwfbResultEntity.Success, result)
 
             assertEquals(legacyName, key.keyName)
             assertEquals("v-$legacyName", store.data.first()[stringPreferencesKey(legacyName)])

@@ -8,7 +8,6 @@ import com.pwfb.domain.usecase.PrefUseCase
 import com.pwfb.domain.usecase.file.CreateLogFileUseCase
 import com.pwfb.domain.usecase.file.GetLogFileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,7 +15,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
 import javax.inject.Inject
 
@@ -51,7 +49,7 @@ class MainViewModel @Inject constructor(
 
     fun requestLogUpload() {
         viewModelScope.launch {
-            _logUpload.emit(withContext(Dispatchers.IO) { getLogFileUseCase() })
+            _logUpload.emit(getLogFileUseCase())
         }
     }
 

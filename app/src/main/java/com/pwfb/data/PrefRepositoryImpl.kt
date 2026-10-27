@@ -7,7 +7,6 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
-import com.pwfb.common.DataStoreResult
 import com.pwfb.domain.entity.PrefKey
 import com.pwfb.domain.entity.PwfbResultEntity
 import com.pwfb.domain.repository.PrefRepository
@@ -54,7 +53,7 @@ class PrefRepositoryImpl @Inject constructor(
     private suspend fun update(transform: (MutablePreferences) -> Unit): PwfbResultEntity {
         return try {
             dataStore.edit { transform(it) }
-            PwfbResultEntity.Success(DataStoreResult.RESULT_SUCCESS)
+            PwfbResultEntity.Success
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

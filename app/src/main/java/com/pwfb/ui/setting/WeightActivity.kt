@@ -3,28 +3,24 @@ package com.pwfb.ui.setting
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.core.widget.addTextChangedListener
 import com.pwfb.R
-import com.pwfb.base.BaseActivity
-import com.pwfb.common.DataStoreResult.RESULT_SUCCESS
+import androidx.appcompat.app.AppCompatActivity
 import com.pwfb.databinding.ActivityWeightBinding
 import com.pwfb.domain.entity.PwfbResultEntity
 import dagger.hilt.android.AndroidEntryPoint
 
 
 @AndroidEntryPoint
-class WeightActivity: BaseActivity() {
+class WeightActivity: AppCompatActivity() {
 
     private lateinit var binding: ActivityWeightBinding
     private val viewModel: WeightViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.d(PWFB, "WeightActivity onCreate")
-
         super.onCreate(savedInstanceState)
         binding = ActivityWeightBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -63,7 +59,7 @@ class WeightActivity: BaseActivity() {
         }
 
         viewModel.weightObserve.observe(this) {
-            if(it == PwfbResultEntity.Success(RESULT_SUCCESS)) {
+            if(it is PwfbResultEntity.Success) {
                 val intent = Intent(applicationContext, DayActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
                 startActivity(intent)

@@ -2,7 +2,6 @@ package com.pwfb.ui
 
 import android.graphics.Rect
 import android.os.Bundle
-import android.util.Log
 import android.view.MotionEvent
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
@@ -13,7 +12,7 @@ import androidx.fragment.app.commit
 import androidx.lifecycle.Lifecycle
 import com.google.android.gms.ads.AdRequest
 import com.pwfb.R
-import com.pwfb.base.BaseActivity
+import androidx.appcompat.app.AppCompatActivity
 import com.pwfb.databinding.ActivityMainBinding
 import com.pwfb.ui.home.HomeFragment
 import com.pwfb.ui.nutrition.NutritionFragment
@@ -22,7 +21,7 @@ import com.pwfb.ui.training.TrainingFragment
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class MainActivity : BaseActivity() {
+class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
     /**
@@ -44,8 +43,6 @@ class MainActivity : BaseActivity() {
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.d(PWFB, "MainActivity onCreate")
-
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)

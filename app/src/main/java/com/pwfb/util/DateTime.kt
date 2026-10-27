@@ -23,7 +23,7 @@ fun getCurrentTime(): String {
     ).format(Calendar.getInstance(Locale.getDefault()).time)
 }
 
-private val DDAY_DATE_FORMATTER = DateTimeFormatter.ofPattern("uuuu.MM.dd")
+internal val DDAY_DATE_FORMATTER = DateTimeFormatter.ofPattern("uuuu.MM.dd")
 
 /**
  * 저장된 D-Day 문자열("yyyy.MM.dd(요일) HH:mm⏳")의 앞 10자리 날짜를 기준으로

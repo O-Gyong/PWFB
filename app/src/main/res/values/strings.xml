@@ -10,10 +10,7 @@
     <string name="training">Training</string>
     <string name="profile">Profile</string>
 
-    <string name="kr_home">홈</string>
     <string name="kr_nutrition">영양</string>
-    <string name="kr_training">훈련</string>
-    <string name="kr_profile">프로필</string>
     
     <string name="peak_week_strategy">✨ Peak Week 전략 ✨</string>
     <string name="gonna_be_alright">Everything gonna be alright</string>
@@ -67,7 +64,7 @@
     <string name="weight_invalid">올바른 체중을 입력해주세요.</string>
     <string name="save_failed">저장에 실패했습니다. 다시 시도해주세요.</string>
     <string name="log_empty">전송할 로그가 없습니다.</string>
-    <string name="log_sending">로그 전송 중...</string>
+    <string name="log_sending">로그 전송 중…</string>
     <string name="log_send_success">로그 전송 완료</string>
     <string name="log_send_fail">로그 전송 실패</string>
 
@@ -164,7 +161,7 @@
         글리코겐 및 수분 보유량에 따라 크게 달라지므로,\n자주 측정해주세요.
     </string>
 
-    <string name="profile_weight">이상적인 공복 체중 : %s~%sKg</string>
+    <string name="profile_weight">이상적인 공복 체중 : %1$s~%2$sKg</string>
     <string name="modify">변경</string>
 
     <string-array name="calendar_week">
@@ -177,20 +174,6 @@
         <item>일</item>
     </string-array>
 
-    <string-array name="calendar_month">
-        <item>1월</item>
-        <item>2월</item>
-        <item>3월</item>
-        <item>4월</item>
-        <item>5월</item>
-        <item>6월</item>
-        <item>7월</item>
-        <item>8월</item>
-        <item>9월</item>
-        <item>10월</item>
-        <item>11월</item>
-        <item>12월</item>
-    </string-array>
 
     <!-- Description -->
     <string name="bt_time_description">d-day 시간 설정</string>
@@ -200,4 +183,14 @@
 
     <string name="admob_key">ca-app-pub-4818752422104122/4888923038</string>
 
+    <string name="app_update_failed">앱 업데이트 실패</string>
+    <string name="calendar_title">%1$d년 %2$02d월</string>
+    <string name="nutrition_explain_carbohydrate">권장 탄수화물 섭취량(g)</string>
+    <string name="nutrition_explain_protein">권장 단백질 섭취량(g)</string>
+    <string name="nutrition_explain_fat">권장 지방 섭취량(g)</string>
+    <string name="nutrition_explain_water">권장 수분 섭취량(ml)</string>
+    <string name="nutrition_explain_sodium">권장 나트륨 섭취량(mg)</string>
+    <string name="nutrition_explain_potassium">권장 칼륨 섭취량(mg)</string>
+    <string name="nutrition_explain_creatine">권장 크레아틴 섭취량(g)</string>
+    <string name="nutrition_explain_dietary_fiber">권장 식이섬유 섭취량(g)</string>
 </resources>

@@ -14,7 +14,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.pwfb.R
-import com.pwfb.base.BaseFragment
+import androidx.fragment.app.Fragment
 import com.pwfb.databinding.FragmentTrainingBinding
 import com.pwfb.domain.entity.PrefKey
 import com.pwfb.ui.MainViewModel
@@ -25,7 +25,7 @@ import com.pwfb.util.calcDDay
 
 
 @AndroidEntryPoint
-class TrainingFragment : BaseFragment() {
+class TrainingFragment : Fragment() {
 
     private var _binding: FragmentTrainingBinding? = null
     private val binding get() = _binding!!

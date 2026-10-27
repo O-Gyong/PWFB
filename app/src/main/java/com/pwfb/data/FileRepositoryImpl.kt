@@ -1,43 +1,51 @@
 package com.pwfb.data
 
-import com.pwfb.common.Firebase.crashlytics
+import com.pwfb.domain.repository.ErrorReporter
 import com.pwfb.domain.repository.FileRepository
 import com.pwfb.util.getCurrentTime
 import com.pwfb.util.getCurrentToday
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.BufferedWriter
 import java.io.File
-import java.io.FileWriter
-import javax.inject.Inject
+import java.util.concurrent.TimeUnit
 
-class FileRepositoryImpl @Inject constructor(private val logsDirectory: File) : FileRepository {
-    override suspend fun createLogFile(msg: String) {
+class FileRepositoryImpl(
+    private val logsDirectory: File,
+    private val errorReporter: ErrorReporter,
+    private val retentionDays: Int = DEFAULT_RETENTION_DAYS
+) : FileRepository {
+
+    companion object {
+        const val DEFAULT_RETENTION_DAYS = 7
+    }
+
+    override suspend fun createLogFile(msg: String) = withContext(Dispatchers.IO) {
         try {
-            if (!logsDirectory.exists()) {
-                logsDirectory.mkdirs()
-            }
-
-            val file = File(logsDirectory, "${getCurrentToday()}.txt")
-
-            if (!file.exists()) withContext(Dispatchers.IO) {
-                file.createNewFile()
-            }
-
-            val header = "【ERROR】[${getCurrentToday() + " " + getCurrentTime()}]"
-
-            withContext(Dispatchers.IO) {
-                BufferedWriter(FileWriter(file, true)).use { buf ->
-                    buf.append("$header $msg")
-                    buf.newLine()
-                }
-            }
+            logsDirectory.mkdirs()
+            val header = "【ERROR】[${getCurrentToday()} ${getCurrentTime()}]"
+            todayFile().appendText("$header $msg\n")
+            deleteExpiredLogs()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            crashlytics.recordException(e)
+            errorReporter.report(e)
         }
     }
 
-    override fun getFile(): File? = logsDirectory.listFiles()?.find {
-        it.name == getCurrentToday() + ".txt"
+    override suspend fun getFile(): File? = withContext(Dispatchers.IO) {
+        todayFile().takeIf { it.exists() }
+    }
+
+    private fun todayFile() = File(logsDirectory, "${getCurrentToday()}.txt")
+
+    /**
+     * 로그가 무한히 쌓이지 않도록 보관 기간이 지난 파일을 지운다.
+     */
+    private fun deleteExpiredLogs() {
+        val expireBefore = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(retentionDays.toLong())
+        logsDirectory.listFiles()
+            ?.filter { it.isFile && it.lastModified() < expireBefore }
+            ?.forEach { it.delete() }
     }
 }

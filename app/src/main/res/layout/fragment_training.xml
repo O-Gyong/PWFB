@@ -93,6 +93,7 @@
             <TextView
                 style="@style/style_function_color_text"
                 android:id="@+id/tv_training_program"
+                android:labelFor="@+id/et_training_program"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/write_training_plan"

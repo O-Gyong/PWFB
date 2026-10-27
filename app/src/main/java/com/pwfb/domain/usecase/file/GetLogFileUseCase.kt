@@ -5,5 +5,5 @@ import java.io.File
 import javax.inject.Inject
 
 class GetLogFileUseCase @Inject constructor(private val fileRepository: FileRepository) {
-    operator fun invoke(): File? = fileRepository.getFile()
+    suspend operator fun invoke(): File? = fileRepository.getFile()
 }

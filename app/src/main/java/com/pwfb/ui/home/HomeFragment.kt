@@ -10,7 +10,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.pwfb.R
-import com.pwfb.base.BaseFragment
+import androidx.fragment.app.Fragment
 import com.pwfb.common.NutritionObject.nutritionEntityLists
 import com.pwfb.databinding.FragmentHomeBinding
 import com.pwfb.domain.entity.PrefKey
@@ -23,7 +23,7 @@ import com.pwfb.util.calcDDay
 
 
 @AndroidEntryPoint
-class HomeFragment : BaseFragment() {
+class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
@@ -58,7 +58,7 @@ class HomeFragment : BaseFragment() {
                         viewModel.state(PrefKey.WEIGHT),
                         viewModel.state(PrefKey.D_DAY)
                     ) { weight, dDayText -> weight to dDayText }.collectLatest { (weight, dDayText) ->
-                        // 초기값("")이나 미설정 값("WeightNull")은 숫자가 아니므로 무시
+                        // 아직 읽기 전(빈 문자열)이면 무시
                         kg = weight.toDoubleOrNull() ?: return@collectLatest
                         binding.tvWeight.text = weight + getString(R.string.kg)
 
@@ -67,7 +67,7 @@ class HomeFragment : BaseFragment() {
                         binding.tvDDay.text = "D$dDay"
                         binding.tvDate.text = dDayText
 
-                        binding.lvNutrition.adapter = ListAdapter(requireContext(), nutritionEntityLists, kg, dDay)
+                        binding.lvNutrition.adapter = ListAdapter(nutritionEntityLists, kg, dDay)
 
                         binding.tvTraining.text = when(dDay) {
                             -6 -> {

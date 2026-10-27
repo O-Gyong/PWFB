@@ -5,8 +5,8 @@ package com.pwfb.domain.entity
  * keyName은 DataStore에 저장된 기존 키 이름과 동일해야 한다 (변경 시 기존 사용자 데이터 유실).
  */
 enum class PrefKey(val keyName: String, val default: String = "") {
-    NAME("name", "NameNull"), // 이름
-    WEIGHT("weight", "WeightNull"), // 체중(공복 체중)
+    NAME("name"), // 이름
+    WEIGHT("weight"), // 체중(공복 체중)
     D_DAY("dDay"), // d-day
     TRAINING_PROGRAM("trainingProgram"), // 트레이닝 기록
     CARBOHYDRATE("carbohydrate"), // 탄수화물

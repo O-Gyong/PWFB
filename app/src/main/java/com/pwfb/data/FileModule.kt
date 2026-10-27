@@ -1,6 +1,7 @@
 package com.pwfb.data
 
 import android.content.Context
+import com.pwfb.domain.repository.ErrorReporter
 import com.pwfb.domain.repository.FileRepository
 import dagger.Module
 import dagger.Provides
@@ -12,9 +13,11 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-class FileModule {
+object FileModule {
     @Provides
     @Singleton
-    fun provideFileRepository(@ApplicationContext applicationContext: Context): FileRepository
-            = FileRepositoryImpl(File(applicationContext.filesDir, "logs"))
+    fun provideFileRepository(
+        @ApplicationContext applicationContext: Context,
+        errorReporter: ErrorReporter
+    ): FileRepository = FileRepositoryImpl(File(applicationContext.filesDir, "logs"), errorReporter)
 }

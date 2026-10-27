@@ -9,49 +9,47 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.annotation.StringRes
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.firebase.installations.FirebaseInstallations
-import com.prolificinteractive.materialcalendarview.CalendarDay
-import com.prolificinteractive.materialcalendarview.format.ArrayWeekDayFormatter
-import com.prolificinteractive.materialcalendarview.format.MonthArrayTitleFormatter
+import com.google.firebase.storage.StorageReference
 import com.pwfb.R
-import com.pwfb.base.BaseFragment
-import com.pwfb.common.Firebase
 import com.pwfb.databinding.FragmentProfileBinding
 import com.pwfb.domain.entity.PrefKey
 import com.pwfb.ui.MainViewModel
-import com.pwfb.util.ClearDecorator
-import com.pwfb.util.DayDisableDecorator
-import com.pwfb.util.SelectDecorator
-import com.pwfb.util.TodayDecorator
 import com.pwfb.util.calcDDay
+import com.pwfb.util.formatDatePref
 import com.pwfb.util.formatTimeDisplay
 import com.pwfb.util.formatTimeStore
 import com.pwfb.util.getCurrentToday
-import com.pwfb.util.getWeekKor
+import com.pwfb.util.parseDatePref
 import com.pwfb.util.parseStoredTime
+import com.pwfb.util.setupPwfbCalendar
+import com.pwfb.util.showSelectedPwfbDate
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import org.threeten.bp.format.DateTimeFormatter
 import java.io.File
 import java.util.Calendar
+import javax.inject.Inject
 
 
 @AndroidEntryPoint
-@SuppressLint("SimpleDateFormat", "SetTextI18n", "InflateParams")
-class ProfileFragment : BaseFragment() {
+@SuppressLint("SetTextI18n", "InflateParams")
+class ProfileFragment : Fragment() {
 
     private var _binding: FragmentProfileBinding? = null
     private val binding get() = _binding!!
     private val viewModel: MainViewModel by viewModels()
 
+    @Inject
+    lateinit var logStorageReference: StorageReference
+
     private var dDayPref = ""
-    private var datePref = ""
     private var timePref = ""
     private var weightPref = 0.0
     private var weight = 0.0
@@ -136,7 +134,7 @@ class ProfileFragment : BaseFragment() {
 
                 launch {
                     viewModel.state(PrefKey.WEIGHT).collectLatest {
-                        // 초기값("")이나 미설정 값("WeightNull")은 숫자가 아니므로 무시
+                        // 아직 읽기 전(빈 문자열)이면 무시
                         val savedWeight = it.toDoubleOrNull() ?: return@collectLatest
                         weightPref = savedWeight
                         weight = savedWeight
@@ -153,25 +151,13 @@ class ProfileFragment : BaseFragment() {
 
                 launch {
                     viewModel.state(PrefKey.D_DAY).collectLatest {
-                        if(it.isEmpty()) {
-                            return@collectLatest
-                        }
+                        val targetDate = parseDatePref(it) ?: return@collectLatest
                         dDayPref = it
-                        datePref = it.substring(0..9)
                         setDDay()
 
                         if(it.length >= 19) setTime(it.substring(14, 19))
 
-                        val targetCalendarDay = CalendarDay.from(org.threeten.bp.LocalDate.parse(
-                            datePref,
-                            DateTimeFormatter.ofPattern("yyyy.MM.dd"))
-                        )
-                        val targetDecorator = SelectDecorator(
-                            requireContext().getColor(R.color.c_caab3f),
-                            targetCalendarDay
-                        )
-                        binding.cvCalendar.selectedDate = targetCalendarDay
-                        binding.cvCalendar.addDecorator(targetDecorator)
+                        binding.cvCalendar.showSelectedPwfbDate(targetDate)
                     }
                 }
 
@@ -191,7 +177,6 @@ class ProfileFragment : BaseFragment() {
                     viewModel.logUpload.collect { uploadLog(it) }
                 }
             }
-
         }
     }
 
@@ -209,8 +194,8 @@ class ProfileFragment : BaseFragment() {
         FirebaseInstallations.getInstance().id.addOnCompleteListener { task ->
             val name = if(task.isSuccessful) task.result else "unknown_${System.currentTimeMillis()}"
             try {
-                Firebase.firebaseReference
-                    .child("logs/${getCurrentToday()}/$name.txt")
+                logStorageReference
+                    .child("${getCurrentToday()}/$name.txt")
                     .putFile(Uri.fromFile(file))
                     .addOnSuccessListener { showToast(R.string.log_send_success) }
                     .addOnFailureListener { showToast(R.string.log_send_fail) }
@@ -229,52 +214,11 @@ class ProfileFragment : BaseFragment() {
     }
 
     private fun setCalendarView() {
-        // 연, 월 헤더 스타일
-        binding.cvCalendar.setHeaderTextAppearance(R.style.CalendarWidgetHeader)
-
-        // 1~12월, 월간 표시
-        binding.cvCalendar.setTitleFormatter(MonthArrayTitleFormatter(resources.getTextArray(R.array.calendar_month)))
-
-        // 일~토, 주간 표시
-        binding.cvCalendar.setWeekDayFormatter(ArrayWeekDayFormatter(resources.getTextArray(R.array.calendar_week)))
-
-        // 헤더 년 월로 표시
-        binding.cvCalendar.setTitleFormatter { day ->
-            val inputText = day.date
-            val calendarHeaderElements = inputText.toString().split("-")
-            val calendarHeaderBuilder = StringBuilder()
-
-            calendarHeaderBuilder
-                .append(calendarHeaderElements[0]).append("년 ")
-                .append(calendarHeaderElements[1]).append("월")
-
-            calendarHeaderBuilder.toString()
-        }
-
-        val today = CalendarDay.today()
-        val disabledDates = hashSetOf<CalendarDay>()
-
-        val dayDisableDecorator = DayDisableDecorator(disabledDates, today, requireContext().getColor(R.color.c_949292))
-        val todayDecorator = TodayDecorator(requireContext().getColor(R.color.c_caab3f))
-
-        binding.cvCalendar.addDecorators(dayDisableDecorator, todayDecorator)
-
-        // 날짜 선택 시 처리
-        binding.cvCalendar.setOnDateChangedListener { _, date, _ ->
-            binding.cvCalendar.addDecorators(
-                ClearDecorator(requireContext().getColor(R.color.white), date),
-                dayDisableDecorator, todayDecorator,
-                SelectDecorator(requireContext().getColor(R.color.c_caab3f), date)
-            )
-
+        binding.cvCalendar.setupPwfbCalendar { date ->
             binding.btModify.isEnabled = true
             binding.btModify.setTextColor(requireContext().getColor(R.color.white))
 
-            val month = if(date.month<10) "0${date.month}" else "${date.month}"
-            val day = if(date.day<10) "0${date.day}" else "${date.day}"
-
-            dDayPref = "${date.year}.$month.$day${getWeekKor(date.year, date.month, date.day)}"
-
+            dDayPref = formatDatePref(date)
             setDDay()
         }
     }

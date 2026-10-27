@@ -3,27 +3,23 @@ package com.pwfb.ui.setting
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.viewModels
 import androidx.core.widget.addTextChangedListener
 import com.pwfb.R
-import com.pwfb.base.BaseActivity
-import com.pwfb.common.DataStoreResult.RESULT_SUCCESS
+import androidx.appcompat.app.AppCompatActivity
 import com.pwfb.databinding.ActivityNameBinding
 import com.pwfb.domain.entity.PwfbResultEntity
 import dagger.hilt.android.AndroidEntryPoint
 
 
 @AndroidEntryPoint
-class NameActivity: BaseActivity() {
+class NameActivity: AppCompatActivity() {
 
     private lateinit var binding: ActivityNameBinding
     private val viewModel: NameViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.d(PWFB, "NameActivity onCreate")
-
         super.onCreate(savedInstanceState)
         binding = ActivityNameBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -57,7 +53,7 @@ class NameActivity: BaseActivity() {
         }
 
         viewModel.nameObserve.observe(this) {
-            if(it == PwfbResultEntity.Success(RESULT_SUCCESS)) {
+            if(it is PwfbResultEntity.Success) {
                 val intent = Intent(applicationContext, WeightActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
                 startActivity(intent)
