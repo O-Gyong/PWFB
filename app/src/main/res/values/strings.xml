@@ -1,8 +1,9 @@
 <resources>
     <string name="app_name">pwfb</string>
     <string name="app_name_upper">PWFB</string>
-
-    <string name="app_version">App Version : 1.4</string>
+    <string name="app_description">보디빌딩 대회 피크위크 영양·트레이닝 가이드</string>
+    <string name="app_version_format">버전 %s</string>
+    <string name="font_credit">서체: Pretendard (SIL Open Font License)</string>
 
     <string name="splash_title">PEAK WEEK FOR BODYBUILDING</string>
     <string name="home">Home</string>
@@ -10,38 +11,55 @@
     <string name="training">Training</string>
     <string name="profile">Profile</string>
 
-    <string name="kr_nutrition">영양</string>
-    
-    <string name="peak_week_strategy">✨ Peak Week 전략 ✨</string>
+    <!-- 홈 -->
+    <string name="peak_week_strategy">Peak Week 전략</string>
     <string name="gonna_be_alright">Everything gonna be alright</string>
     <string name="man_of_the_hour">👍 오늘 주인공은 당신입니다!</string>
     <string name="correction_day">🤘 Correction Day!</string>
     <string name="high_carbohydrate_day">🤙 High Carb(고탄수) Day!</string>
     <string name="low_carbohydrate_day">🤙 Low Carb(저탄수) Day!</string>
     <string name="re_feed_day">😋 ReFeed Day!</string>
-    <string name="empty_stomach_weight">EMPTY STOMACH WEIGHT</string>
     <string name="d_day">D-DAY</string>
-    <string name="nutrition_upper">NUTRITION</string>
-    <string name="training_upper">TRAINING</string>
+    <string name="progress_start">D-7</string>
+    <string name="home_training_title">오늘의 트레이닝</string>
+    <string name="home_nutrition_title">오늘의 영양 가이드</string>
+    <string name="empty_stomach_weight_tip">글리코겐·수분 보유량에 따라 크게 달라지니 자주 측정하세요.</string>
 
-    <string name="carbohydrate_upper">CARBOHYDRATE</string>
-    <string name="protein_upper">PROTEIN</string>
-    <string name="fat_upper">FAT</string>
-    <string name="water_upper">WATER</string>
-    <string name="sodium_upper">SODIUM</string>
-    <string name="potassium_upper">POTASSIUM</string>
-    <string name="creatine_upper">CREATINE</string>
-    <string name="dietary_fiber_upper">DIETARY FIBER</string>
+    <!-- 영양 탭 -->
+    <string name="nutrition_section_title">영양소별 가이드 &amp; 기록</string>
+    <string name="nutrient_carbohydrate">탄수화물</string>
+    <string name="nutrient_protein">단백질</string>
+    <string name="nutrient_fat">지방</string>
+    <string name="nutrient_water">수분</string>
+    <string name="nutrient_sodium">나트륨</string>
+    <string name="nutrient_potassium">칼륨</string>
+    <string name="nutrient_creatine">크레아틴</string>
+    <string name="nutrient_dietary_fiber">식이섬유</string>
+    <string name="hint_nutrition_intake">오늘 섭취량 기록</string>
+    <string name="unit_g">g</string>
+    <string name="unit_ml">ml</string>
+    <string name="unit_mg">mg</string>
+    <string name="unit_kg">kg</string>
 
-    <string name="custom_training_program_upper">CUSTOM TRAINING PROGRAM</string>
+    <!-- 트레이닝 탭 -->
+    <string name="training_plan_title">나의 운동 계획</string>
+    <string name="training_plan_tip">입력칸 밖을 누르거나 탭을 옮기면 자동으로 저장됩니다.</string>
+    <string name="write_training_plan">운동 계획을 작성해보세요</string>
+
+    <!-- 프로필 탭 -->
+    <string name="profile_goal">목표</string>
+    <string name="profile_d_day">대회 D-Day</string>
     <string name="pwfb_information">PWFB 정보</string>
     <string name="log_send">로그 전송</string>
-    <string name="the_day_strategy_1">당일 전략 💥</string>
-    <string name="the_day_strategy_2">✨ 당일 전략 ✨</string>
+    <string name="the_day_strategy_1">당일 전략</string>
+    <string name="the_day_strategy_2">당일 전략</string>
+    <string name="the_day_strategy_subtitle">무대 직전 컨디션에 맞는 마지막 조정을 안내합니다.</string>
 
     <string name="full_upper">FULL</string>
     <string name="dry_upper">DRY</string>
-    <string name="choose_upper">CHOOSE</string>
+    <string name="emoji_full">💪</string>
+    <string name="emoji_dry">🔥</string>
+    <string name="choose_upper">지금 컨디션은?</string>
 
     <string name="am_i_full">Am I Full?</string>
     <string name="am_i_dry">Am I Dry?</string>
@@ -55,11 +73,18 @@
     <string name="continue_dehydration_strategy">Continue Dehydration Strategy</string>
     <string name="continue_upper">CONTINUE</string>
 
+    <!-- 온보딩 -->
+    <string name="onboarding_step_1">STEP 1 OF 3</string>
+    <string name="onboarding_step_2">STEP 2 OF 3</string>
+    <string name="onboarding_step_3">STEP 3 OF 3</string>
     <string name="welcome">환영합니다! 👋</string>
-    <string name="input_name">What\'s Your Name?</string>
+    <string name="welcome_subtitle">먼저 이름을 알려주세요.</string>
+    <string name="input_name">이름</string>
     <string name="next">Next</string>
 
     <string name="kr_empty_stomach_weight">공복 체중</string>
+    <string name="weight_subtitle">아침 공복 상태에서 잰 체중을 입력하세요. 권장 섭취량 계산에 사용됩니다.</string>
+    <string name="input_weight">체중</string>
     <string name="kg">Kg</string>
     <string name="weight_invalid">올바른 체중을 입력해주세요.</string>
     <string name="save_failed">저장에 실패했습니다. 다시 시도해주세요.</string>
@@ -68,20 +93,15 @@
     <string name="log_send_success">로그 전송 완료</string>
     <string name="log_send_fail">로그 전송 실패</string>
 
+    <string name="d_day_subtitle">대회 날짜와 무대에 오르는 시간을 선택하세요.</string>
+    <string name="competition_date">대회 날짜</string>
+    <string name="select_date">날짜 선택</string>
     <string name="go">Go</string>
     <string name="time">시간</string>
     <string name="confirm">확인</string>
     <string name="cancel">취소</string>
 
-    <string name="hint_nutrition_carbohydrate">섭취할 탄수화물을 자유롭게 입력해주세요</string>
-    <string name="hint_nutrition_protein">섭취할 단백질을 자유롭게 입력해주세요</string>
-    <string name="hint_nutrition_fat">섭취할 지방을 자유롭게 입력해주세요</string>
-    <string name="hint_nutrition_water">섭취할 물의 양을 자유롭게 입력해주세요</string>
-    <string name="hint_nutrition_sodium">섭취할 염분을 자유롭게 입력해주세요</string>
-    <string name="hint_nutrition_potassium">섭취할 칼륨을 자유롭게 입력해주세요</string>
-    <string name="hint_nutrition_creatine">섭취할 크레아틴을 자유롭게 입력해주세요</string>
-    <string name="hint_nutrition_dietary_fiber">섭취할 식이섬유를 자유롭게 입력해주세요</string>
-
+    <!-- 홈 영양 문구 -->
     <string name="home_carbohydrate_day_7">평소보다 150g 이내로 추가 섭취하세요 🌾</string>
     <string name="home_carbohydrate_day_654">50~100g 내외 섭취하세요 🌾</string>
     <string name="home_carbohydrate_day_32">%dg 섭취하세요 🌾</string>
@@ -117,6 +137,7 @@
     <string name="home_training_day_2">전신 펌핑 및 포징 연습을 하세요</string>
     <string name="home_training_day_1">충분한 휴식을 하세요</string>
 
+    <!-- 영양 탭 문구 -->
     <string name="nutrition_carbohydrate_day_7">평소 섭취량(g) + 150g 🌾</string>
     <string name="nutrition_carbohydrate_day_654">탄수화물 고갈:50g~100g 내외 섭취 🌾</string>
     <string name="nutrition_carbohydrate_day_3">최대량: ~(체중x10)g 🌾</string>
@@ -149,42 +170,25 @@
 
     <string name="nutrition_usually_intake">평소대로 진행하세요 %s</string>
     <string name="nutrition_usually_intake_2">평소대로 진행 %s</string>
-    
-    <string name="write_training_plan">운동 계획을 작성해보세요</string>
+
+    <!-- 트레이닝 탭 문구 -->
     <string name="training_day_6">마지막 하체 훈련! 🏋️</string>
     <string name="training_day_54">상체 고볼륨 훈련,\n다음날 과한 근육통은 금물! 🔥</string>
     <string name="training_day_3">이른 아침 운동 후, 로딩 시작 🧨</string>
     <string name="training_day_2">전신 펌핑 및 포징 연습 💥</string>
     <string name="training_day_1">휴식 🧘</string>
 
-    <string name="empty_stomach_weight_tip">
-        글리코겐 및 수분 보유량에 따라 크게 달라지므로,\n자주 측정해주세요.
-    </string>
-
     <string name="profile_weight">이상적인 공복 체중 : %1$s~%2$sKg</string>
     <string name="modify">변경</string>
 
-    <string-array name="calendar_week">
-        <item>월</item>
-        <item>화</item>
-        <item>수</item>
-        <item>목</item>
-        <item>금</item>
-        <item>토</item>
-        <item>일</item>
-    </string-array>
-
-
     <!-- Description -->
-    <string name="bt_time_description">d-day 시간 설정</string>
-    <string name="iv_plus_description">+ 아이콘</string>
-    <string name="iv_minus_description">- 아이콘</string>
+    <string name="iv_plus_description">체중 0.1kg 올리기</string>
+    <string name="iv_minus_description">체중 0.1kg 내리기</string>
     <string name="iv_app">App 이미지</string>
 
     <string name="admob_key">ca-app-pub-4818752422104122/4888923038</string>
 
     <string name="app_update_failed">앱 업데이트 실패</string>
-    <string name="calendar_title">%1$d년 %2$02d월</string>
     <string name="nutrition_explain_carbohydrate">권장 탄수화물 섭취량(g)</string>
     <string name="nutrition_explain_protein">권장 단백질 섭취량(g)</string>
     <string name="nutrition_explain_fat">권장 지방 섭취량(g)</string>

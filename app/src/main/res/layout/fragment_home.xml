@@ -1,174 +1,223 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
-    xmlns:tools="http://schemas.android.com/tools"
+<androidx.core.widget.NestedScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:clipToPadding="false"
+    android:fillViewport="true"
+    android:paddingHorizontal="20dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="24dp">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="20dp">
+        android:orientation="vertical">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            style="@style/style_function_layout"
-            android:id="@+id/cl_peak_week"
-            android:layout_marginTop="20dp"
-            android:background="@drawable/shape_function_layout"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:ignore="MissingConstraints">
+        <!-- ① D-Day 히어로 카드 -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_d_day"
+            style="@style/Widget.Pwfb.Card.Hero"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-            <TextView
-                android:id="@+id/tv_title_peak_week_strategy"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@android:color/transparent"
-                android:text="@string/peak_week_strategy"
-                android:textColor="@color/c_caab3f"
-                android:textSize="20sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                android:orientation="vertical"
+                android:padding="24dp">
 
-            <TextView
-                style="@style/style_function_white_text"
-                android:id="@+id/tv_peak_week_strategy"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@android:color/transparent"
-                android:text="@string/gonna_be_alright"
-                app:layout_constraintTop_toBottomOf="@id/tv_title_peak_week_strategy"
-                tools:ignore="MissingConstraints" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/d_day"
+                    android:textAppearance="@style/TextAppearance.Pwfb.Eyebrow"
+                    android:textColor="?attr/colorPrimary" />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+                <TextView
+                    android:id="@+id/tv_d_day"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:includeFontPadding="false"
+                    android:textAppearance="?attr/textAppearanceDisplayLarge"
+                    android:textColor="?attr/colorOnSurface"
+                    tools:text="D-7" />
 
+                <TextView
+                    android:id="@+id/tv_date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    tools:text="2023.12.28(목) 18:00⏳" />
+
+                <!-- D-7 → D-DAY 진행 스트립 (8칸) -->
+                <LinearLayout
+                    android:id="@+id/ll_progress"
+                    android:layout_width="match_parent"
+                    android:layout_height="6dp"
+                    android:layout_marginTop="20dp"
+                    android:orientation="horizontal">
+
+                    <View style="@style/Widget.Pwfb.Segment" android:layout_marginStart="0dp" />
+                    <View style="@style/Widget.Pwfb.Segment" />
+                    <View style="@style/Widget.Pwfb.Segment" />
+                    <View style="@style/Widget.Pwfb.Segment" />
+                    <View style="@style/Widget.Pwfb.Segment" />
+                    <View style="@style/Widget.Pwfb.Segment" />
+                    <View style="@style/Widget.Pwfb.Segment" />
+                    <View style="@style/Widget.Pwfb.Segment" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/progress_start"
+                        android:textAppearance="?attr/textAppearanceLabelSmall"
+                        android:textColor="?attr/colorOnSurfaceVariant" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/d_day"
+                        android:textAppearance="?attr/textAppearanceLabelSmall"
+                        android:textColor="?attr/colorOnSurfaceVariant" />
+                </LinearLayout>
+
+                <!-- 오늘의 피크위크 전략 -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:text="@string/peak_week_strategy"
+                    android:textAppearance="@style/TextAppearance.Pwfb.Eyebrow" />
+
+                <TextView
+                    android:id="@+id/tv_peak_week_strategy"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_rounded_16"
+                    android:backgroundTint="?attr/colorPrimaryContainer"
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="14dp"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:textColor="?attr/colorOnPrimaryContainer"
+                    tools:text="🤙 Low Carb(저탄수) Day!" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ② 공복 체중 · 오늘 트레이닝 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:baselineAligned="false"
+            android:orientation="horizontal">
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/kr_empty_stomach_weight"
+                        android:textAppearance="@style/TextAppearance.Pwfb.Eyebrow" />
+
+                    <TextView
+                        android:id="@+id/tv_weight"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:includeFontPadding="false"
+                        android:textAppearance="?attr/textAppearanceHeadlineMedium"
+                        android:textColor="?attr/colorPrimary"
+                        tools:text="81.6Kg" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/empty_stomach_weight_tip"
+                        android:textAppearance="?attr/textAppearanceBodySmall"
+                        android:textColor="?attr/colorOnSurfaceVariant" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/home_training_title"
+                        android:textAppearance="@style/TextAppearance.Pwfb.Eyebrow" />
+
+                    <TextView
+                        android:id="@+id/tv_training"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:textAppearance="?attr/textAppearanceTitleMedium"
+                        android:textColor="?attr/colorOnSurface"
+                        tools:text="상체 고볼륨 훈련을 하세요\n다음날 과한 근육통은 피하세요" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+
+        <!-- ③ 오늘의 영양 가이드 -->
         <TextView
-            style="@style/style_function_text"
-            android:id="@+id/tv_empty_stomach_weight"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/empty_stomach_weight"
-            android:layout_marginTop="25dp"
-            app:layout_constraintTop_toBottomOf="@id/cl_peak_week"
-            app:layout_constraintStart_toStartOf="parent" />
+            android:layout_marginStart="4dp"
+            android:layout_marginTop="28dp"
+            android:text="@string/home_nutrition_title"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textColor="?attr/colorOnSurface" />
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            style="@style/style_function_layout"
-            android:id="@+id/cl_empty_stomach_weight"
-            android:background="@drawable/shape_function_layout"
-            app:layout_constraintTop_toBottomOf="@id/tv_empty_stomach_weight"
-            tools:ignore="MissingConstraints" >
-
-            <TextView
-                style="@style/style_function_color_text"
-                android:id="@+id/tv_weight"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@android:color/transparent"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:text="81.6Kg"
-                tools:ignore="MissingConstraints" />
-
-            <TextView
-                style="@style/style_function_white_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingHorizontal="20dp"
-                android:background="@android:color/transparent"
-                android:text="@string/empty_stomach_weight_tip"
-                app:layout_constraintTop_toBottomOf="@+id/tv_weight"
-                tools:ignore="MissingConstraints" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <TextView
-            android:id="@+id/tv_title_d_day"
-            android:layout_width="wrap_content"
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/d_day"
-            style="@style/style_function_text"
-            android:layout_marginTop="25dp"
-            app:layout_constraintTop_toBottomOf="@id/cl_empty_stomach_weight"
-            app:layout_constraintStart_toStartOf="parent" />
+            android:layout_marginTop="12dp">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            style="@style/style_function_layout"
-            android:id="@+id/cl_d_day"
-            android:background="@drawable/shape_function_layout"
-            app:layout_constraintTop_toBottomOf="@id/tv_title_d_day"
-            tools:ignore="MissingConstraints" >
-
-            <TextView
-                style="@style/style_function_color_text"
-                android:id="@+id/tv_d_day"
-                android:layout_width="wrap_content"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/lv_nutrition"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@android:color/transparent"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:text="D-7"
-                tools:ignore="MissingConstraints" />
-
-            <TextView
-                style="@style/style_function_white_text"
-                android:id="@+id/tv_date"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingHorizontal="20dp"
-                android:background="@android:color/transparent"
-                app:layout_constraintTop_toBottomOf="@+id/tv_d_day"
-                tools:text="2023.12.28(목) 18:00⏳"
-                tools:ignore="MissingConstraints" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <TextView
-            android:id="@+id/tv_nutrition"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/nutrition_upper"
-            style="@style/style_function_text"
-            android:layout_marginTop="25dp"
-            app:layout_constraintTop_toBottomOf="@id/cl_d_day"
-            app:layout_constraintStart_toStartOf="parent" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            style="@style/style_function_layout"
-            android:id="@+id/lv_nutrition"
-            android:layout_height="wrap_content"
-            android:background="@drawable/shape_function_layout"
-            android:paddingVertical="7dp"
-            app:layout_constraintTop_toBottomOf="@id/tv_nutrition"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            tools:ignore="MissingConstraints" />
-
-        <TextView
-            android:id="@+id/tv_title_training"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/training_upper"
-            style="@style/style_function_text"
-            android:layout_marginTop="25dp"
-            app:layout_constraintTop_toBottomOf="@id/lv_nutrition"
-            app:layout_constraintStart_toStartOf="parent" />
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            style="@style/style_function_layout"
-            android:id="@+id/cl_training"
-            android:background="@drawable/shape_function_layout"
-            app:layout_constraintTop_toBottomOf="@id/tv_title_training"
-            tools:ignore="MissingConstraints" >
-
-            <TextView
-                style="@style/style_function_color_text"
-                android:id="@+id/tv_training"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@android:color/transparent"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:text="상체 고볼륨 훈련"/>
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</ScrollView>
+                android:nestedScrollingEnabled="false"
+                android:overScrollMode="never"
+                android:paddingVertical="6dp"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                tools:itemCount="3"
+                tools:listitem="@layout/item_nutrition" />
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

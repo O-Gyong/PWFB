@@ -1,12 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
-    <color name="c_7a7878">#7A7878</color>
-    <color name="c_caab3f">#CAAB3F</color>
-    <color name="c_31caab3f">#31CAAB3F</color>
-    <color name="c_242323">#242323</color>
-    <color name="c_ff191616">#FF191616</color>
-    <color name="c_949292">#949292</color>
-    <color name="c_46949292">#46949292</color>
+    <!-- Material 3 다크 팔레트. 브랜드 골드(#CAAB3F)를 primary로 두고, 배경은 따뜻한 무채색 톤으로 단계를 나눈다 -->
+    <color name="md_primary">#E8C65C</color>
+    <color name="md_on_primary">#3B2F00</color>
+    <color name="md_primary_container">#564500</color>
+    <color name="md_on_primary_container">#FFE38E</color>
+
+    <color name="md_secondary">#D2C6A4</color>
+    <color name="md_on_secondary">#373118</color>
+    <color name="md_secondary_container">#4E472C</color>
+    <color name="md_on_secondary_container">#EFE2BE</color>
+
+    <color name="md_tertiary">#A9D0B2</color>
+    <color name="md_on_tertiary">#143723</color>
+    <color name="md_tertiary_container">#2C4E38</color>
+    <color name="md_on_tertiary_container">#C5ECCD</color>
+
+    <color name="md_error">#FFB4AB</color>
+    <color name="md_on_error">#690005</color>
+    <color name="md_error_container">#93000A</color>
+    <color name="md_on_error_container">#FFDAD6</color>
+
+    <color name="md_surface">#121110</color>
+    <color name="md_surface_dim">#121110</color>
+    <color name="md_surface_bright">#3A3835</color>
+    <color name="md_surface_container_lowest">#0D0C0B</color>
+    <color name="md_surface_container_low">#1B1A18</color>
+    <color name="md_surface_container">#1F1E1B</color>
+    <color name="md_surface_container_high">#2A2826</color>
+    <color name="md_surface_container_highest">#353330</color>
+    <color name="md_on_surface">#E7E2DB</color>
+    <color name="md_on_surface_variant">#CDC6B6</color>
+    <color name="md_surface_variant">#4B4639</color>
+    <color name="md_inverse_surface">#E7E2DB</color>
+    <color name="md_inverse_on_surface">#302F2C</color>
+    <color name="md_inverse_primary">#715C00</color>
+    <color name="md_outline">#969082</color>
+    <color name="md_outline_variant">#4B4639</color>
+
+    <!-- 영양소별 포인트 색 (아이콘 배경) -->
+    <color name="nutrient_carbohydrate">#F4B942</color>
+    <color name="nutrient_protein">#F2736F</color>
+    <color name="nutrient_fat">#F6A05E</color>
+    <color name="nutrient_water">#5FB3F6</color>
+    <color name="nutrient_sodium">#C9D2DC</color>
+    <color name="nutrient_potassium">#C6DA5B</color>
+    <color name="nutrient_creatine">#B78CF6</color>
+    <color name="nutrient_dietary_fiber">#6FD38F</color>
 </resources>

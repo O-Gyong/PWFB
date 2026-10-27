@@ -6,10 +6,11 @@ import android.os.Bundle
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.viewModels
 import androidx.core.widget.addTextChangedListener
-import com.pwfb.R
 import androidx.appcompat.app.AppCompatActivity
 import com.pwfb.databinding.ActivityNameBinding
 import com.pwfb.domain.entity.PwfbResultEntity
+import com.pwfb.util.applySystemBarInsetsAsPadding
+import com.pwfb.util.enablePwfbEdgeToEdge
 import dagger.hilt.android.AndroidEntryPoint
 
 
@@ -20,21 +21,17 @@ class NameActivity: AppCompatActivity() {
     private val viewModel: NameViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enablePwfbEdgeToEdge()
         super.onCreate(savedInstanceState)
         binding = ActivityNameBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.clName.applySystemBarInsetsAsPadding()
 
         /**
-         * 이름 입력 시 버튼 색 변경
+         * 이름을 입력해야 Next 버튼 활성화
          */
         binding.etName.addTextChangedListener {
-            if(binding.etName.text.isEmpty()) {
-                binding.btNext.isEnabled = false
-                binding.btNext.setTextColor(getColor(R.color.c_949292))
-            }else {
-                binding.btNext.isEnabled = true
-                binding.btNext.setTextColor(getColor(R.color.white))
-            }
+            binding.btNext.isEnabled = !binding.etName.text.isNullOrBlank()
         }
 
         /**

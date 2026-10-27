@@ -1,114 +1,289 @@
 <resources>
-    <style name="Theme.Pwfb" parent="Theme.AppCompat.Light.DarkActionBar">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-        <item name="android:windowBackground">@color/black</item>
-        <item name="bottomSheetDialogTheme">@style/AppBottomSheetDialogTheme</item>
+    <!-- ───────── 앱 테마 (Material 3, 다크 고정) ───────── -->
+    <style name="Theme.Pwfb" parent="Theme.Material3.Dark.NoActionBar">
+        <!-- 색 -->
+        <item name="colorPrimary">@color/md_primary</item>
+        <item name="colorOnPrimary">@color/md_on_primary</item>
+        <item name="colorPrimaryContainer">@color/md_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/md_on_primary_container</item>
+        <item name="colorPrimaryInverse">@color/md_inverse_primary</item>
+        <item name="colorSecondary">@color/md_secondary</item>
+        <item name="colorOnSecondary">@color/md_on_secondary</item>
+        <item name="colorSecondaryContainer">@color/md_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/md_on_secondary_container</item>
+        <item name="colorTertiary">@color/md_tertiary</item>
+        <item name="colorOnTertiary">@color/md_on_tertiary</item>
+        <item name="colorTertiaryContainer">@color/md_tertiary_container</item>
+        <item name="colorOnTertiaryContainer">@color/md_on_tertiary_container</item>
+        <item name="colorError">@color/md_error</item>
+        <item name="colorOnError">@color/md_on_error</item>
+        <item name="colorErrorContainer">@color/md_error_container</item>
+        <item name="colorOnErrorContainer">@color/md_on_error_container</item>
+        <item name="android:colorBackground">@color/md_surface</item>
+        <item name="colorOnBackground">@color/md_on_surface</item>
+        <item name="colorSurface">@color/md_surface</item>
+        <item name="colorOnSurface">@color/md_on_surface</item>
+        <item name="colorSurfaceVariant">@color/md_surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/md_on_surface_variant</item>
+        <item name="colorSurfaceDim">@color/md_surface_dim</item>
+        <item name="colorSurfaceBright">@color/md_surface_bright</item>
+        <item name="colorSurfaceContainerLowest">@color/md_surface_container_lowest</item>
+        <item name="colorSurfaceContainerLow">@color/md_surface_container_low</item>
+        <item name="colorSurfaceContainer">@color/md_surface_container</item>
+        <item name="colorSurfaceContainerHigh">@color/md_surface_container_high</item>
+        <item name="colorSurfaceContainerHighest">@color/md_surface_container_highest</item>
+        <item name="colorSurfaceInverse">@color/md_inverse_surface</item>
+        <item name="colorOnSurfaceInverse">@color/md_inverse_on_surface</item>
+        <item name="colorOutline">@color/md_outline</item>
+        <item name="colorOutlineVariant">@color/md_outline_variant</item>
+
+        <item name="android:windowBackground">@color/md_surface</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+
+        <!-- 서체: Pretendard -->
+        <item name="fontFamily">@font/pretendard</item>
+        <item name="android:fontFamily">@font/pretendard</item>
+        <item name="textAppearanceDisplayLarge">@style/TextAppearance.Pwfb.DisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/TextAppearance.Pwfb.DisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/TextAppearance.Pwfb.DisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/TextAppearance.Pwfb.HeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/TextAppearance.Pwfb.HeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/TextAppearance.Pwfb.HeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/TextAppearance.Pwfb.TitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/TextAppearance.Pwfb.TitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/TextAppearance.Pwfb.TitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/TextAppearance.Pwfb.BodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/TextAppearance.Pwfb.BodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/TextAppearance.Pwfb.BodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/TextAppearance.Pwfb.LabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/TextAppearance.Pwfb.LabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/TextAppearance.Pwfb.LabelSmall</item>
+
+        <!-- 위젯 기본 스타일 -->
+        <item name="materialCardViewStyle">@style/Widget.Pwfb.Card</item>
+        <item name="materialButtonStyle">@style/Widget.Pwfb.Button</item>
+        <item name="textInputStyle">@style/Widget.Pwfb.TextInput</item>
+        <item name="bottomNavigationStyle">@style/Widget.Pwfb.BottomNavigation</item>
+        <item name="bottomSheetDialogTheme">@style/ThemeOverlay.Pwfb.BottomSheetDialog</item>
     </style>
 
-    
-    <style name="style_title_text">
-        <item name="android:textSize">35sp</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textColor">@color/c_caab3f</item>
+    <!-- ───────── 타이포그래피 ───────── -->
+    <style name="TextAppearance.Pwfb.DisplayLarge" parent="TextAppearance.Material3.DisplayLarge">
+        <item name="fontFamily">@font/pretendard</item>
+        <item name="android:fontFamily">@font/pretendard</item>
+        <item name="android:textFontWeight">700</item>
+        <item name="android:letterSpacing">-0.03</item>
+    </style>
+    <style name="TextAppearance.Pwfb.DisplayMedium" parent="TextAppearance.Material3.DisplayMedium">
+        <item name="fontFamily">@font/pretendard</item>
+        <item name="android:fontFamily">@font/pretendard</item>
+        <item name="android:textFontWeight">700</item>
+        <item name="android:letterSpacing">-0.03</item>
+    </style>
+    <style name="TextAppearance.Pwfb.DisplaySmall" parent="TextAppearance.Material3.DisplaySmall">
+        <item name="fontFamily">@font/pretendard</item>
+        <item name="android:fontFamily">@font/pretendard</item>
+        <item name="android:textFontWeight">700</item>
+        <item name="android:letterSpacing">-0.02</item>
+    </style>
+    <style name="TextAppearance.Pwfb.HeadlineLarge" parent="TextAppearance.Material3.HeadlineLarge">
+        <item name="fontFamily">@font/pretendard</item>
+        <item name="android:fontFamily">@font/pretendard</item>
+        <item name="android:textFontWeight">700</item>
+        <item name="android:letterSpacing">-0.02</item>
+    </style>
+    <style name="TextAppearance.Pwfb.HeadlineMedium" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="fontFamily">@font/pretendard</item>
+        <item name="android:fontFamily">@font/pretendard</item>
+        <item name="android:textFontWeight">700</item>
+        <item name="android:letterSpacing">-0.02</item>
+    </style>
+    <style name="TextAppearance.Pwfb.HeadlineSmall" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="fontFamily">@font/pretendard</item>
+        <item name="android:fontFamily">@font/pretendard</item>
+        <item name="android:textFontWeight">700</item>
+        <item name="android:letterSpacing">-0.01</item>
+    </style>
+    <style name="TextAppearance.Pwfb.TitleLarge" parent="TextAppearance.Material3.TitleLarge">
+        <item name="fontFamily">@font/pretendard</item>
+        <item name="android:fontFamily">@font/pretendard</item>
+        <item name="android:textFontWeight">600</item>
+    </style>
+    <style name="TextAppearance.Pwfb.TitleMedium" parent="TextAppearance.Material3.TitleMedium">
+        <item name="fontFamily">@font/pretendard</item>
+        <item name="android:fontFamily">@font/pretendard</item>
+        <item name="android:textFontWeight">600</item>
+    </style>
+    <style name="TextAppearance.Pwfb.TitleSmall" parent="TextAppearance.Material3.TitleSmall">
+        <item name="fontFamily">@font/pretendard</item>
+        <item name="android:fontFamily">@font/pretendard</item>
+        <item name="android:textFontWeight">600</item>
+    </style>
+    <style name="TextAppearance.Pwfb.BodyLarge" parent="TextAppearance.Material3.BodyLarge">
+        <item name="fontFamily">@font/pretendard</item>
+        <item name="android:fontFamily">@font/pretendard</item>
+    </style>
+    <style name="TextAppearance.Pwfb.BodyMedium" parent="TextAppearance.Material3.BodyMedium">
+        <item name="fontFamily">@font/pretendard</item>
+        <item name="android:fontFamily">@font/pretendard</item>
+    </style>
+    <style name="TextAppearance.Pwfb.BodySmall" parent="TextAppearance.Material3.BodySmall">
+        <item name="fontFamily">@font/pretendard</item>
+        <item name="android:fontFamily">@font/pretendard</item>
+    </style>
+    <style name="TextAppearance.Pwfb.LabelLarge" parent="TextAppearance.Material3.LabelLarge">
+        <item name="fontFamily">@font/pretendard</item>
+        <item name="android:fontFamily">@font/pretendard</item>
+        <item name="android:textFontWeight">600</item>
+    </style>
+    <style name="TextAppearance.Pwfb.LabelMedium" parent="TextAppearance.Material3.LabelMedium">
+        <item name="fontFamily">@font/pretendard</item>
+        <item name="android:fontFamily">@font/pretendard</item>
+        <item name="android:textFontWeight">600</item>
+    </style>
+    <style name="TextAppearance.Pwfb.LabelSmall" parent="TextAppearance.Material3.LabelSmall">
+        <item name="fontFamily">@font/pretendard</item>
+        <item name="android:fontFamily">@font/pretendard</item>
+        <item name="android:textFontWeight">600</item>
     </style>
 
-    <style name="style_function_layout">
+    <!-- 섹션 머리말(작은 대문자 라벨) -->
+    <style name="TextAppearance.Pwfb.Eyebrow" parent="TextAppearance.Pwfb.LabelMedium">
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <!-- ───────── 위젯 ───────── -->
+    <!-- 기본 카드: 평평한 톤 컨테이너 -->
+    <style name="Widget.Pwfb.Card" parent="Widget.Material3.CardView.Filled">
+        <item name="cardBackgroundColor">?attr/colorSurfaceContainer</item>
+        <item name="cardCornerRadius">24dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="strokeWidth">0dp</item>
+    </style>
+    <!-- 홈 상단 히어로 카드 -->
+    <style name="Widget.Pwfb.Card.Hero">
+        <item name="cardBackgroundColor">?attr/colorSurfaceContainerHigh</item>
+        <item name="cardCornerRadius">28dp</item>
+    </style>
+
+    <!-- 주요 동작 버튼: 56dp 알약형 -->
+    <style name="Widget.Pwfb.Button" parent="Widget.Material3.Button">
+        <item name="android:minHeight">56dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="cornerRadius">28dp</item>
+        <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
+    </style>
+    <style name="Widget.Pwfb.Button.Tonal" parent="Widget.Material3.Button.TonalButton.Icon">
+        <item name="android:minHeight">48dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconPadding">8dp</item>
+    </style>
+    <style name="Widget.Pwfb.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:minHeight">56dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="cornerRadius">28dp</item>
+        <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
+    </style>
+    <!-- 둥근 아이콘 버튼(체중 증감 등) -->
+    <style name="Widget.Pwfb.IconButton" parent="Widget.Material3.Button.IconButton.Filled.Tonal">
+        <item name="android:layout_width">48dp</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="iconSize">24dp</item>
+    </style>
+
+    <!-- 입력 필드: 둥근 외곽선 -->
+    <style name="Widget.Pwfb.TextInput" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxCornerRadiusTopStart">16dp</item>
+        <item name="boxCornerRadiusTopEnd">16dp</item>
+        <item name="boxCornerRadiusBottomStart">16dp</item>
+        <item name="boxCornerRadiusBottomEnd">16dp</item>
+        <item name="boxStrokeWidth">1dp</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+        <item name="hintTextColor">?attr/colorPrimary</item>
+    </style>
+
+    <!-- 하단 내비게이션 -->
+    <style name="Widget.Pwfb.BottomNavigation" parent="Widget.Material3.BottomNavigationView">
+        <item name="android:background">?attr/colorSurfaceContainer</item>
+        <item name="labelVisibilityMode">labeled</item>
+        <item name="itemActiveIndicatorStyle">@style/Widget.Pwfb.BottomNavigation.ActiveIndicator</item>
+        <item name="itemTextAppearanceActive">?attr/textAppearanceLabelMedium</item>
+        <item name="itemTextAppearanceInactive">?attr/textAppearanceLabelMedium</item>
+    </style>
+    <style name="Widget.Pwfb.BottomNavigation.ActiveIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">?attr/colorPrimaryContainer</item>
+    </style>
+
+    <!-- 홈 D-Day 진행 스트립의 한 칸 (색은 코드에서 backgroundTint로 지정) -->
+    <style name="Widget.Pwfb.Segment" parent="">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_marginStart">4dp</item>
+        <item name="android:background">@drawable/bg_segment</item>
+        <item name="android:backgroundTint">?attr/colorOutlineVariant</item>
+    </style>
+
+    <!-- 프로필 메뉴 행: 아이콘 · 제목 · 꺾쇠 -->
+    <style name="Widget.Pwfb.MenuRow" parent="">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:paddingVertical">15dp</item>
-        <item name="layout_constraintStart_toStartOf">parent</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingHorizontal">20dp</item>
+        <item name="android:paddingVertical">16dp</item>
+        <item name="android:background">?attr/selectableItemBackground</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
     </style>
-    
-    <style name="style_function_text">
-        <item name="android:textSize">18sp</item>
-        <item name="android:textColor">@color/c_949292</item>
-        <item name="android:layout_marginStart">15dp</item>
+    <style name="Widget.Pwfb.MenuRow.Icon" parent="">
+        <item name="android:layout_width">24dp</item>
+        <item name="android:layout_height">24dp</item>
+        <item name="android:tint">?attr/colorPrimary</item>
     </style>
-
-    <style name="style_function_color_text">
-        <item name="android:textSize">20sp</item>
-        <item name="android:textColor">@color/c_caab3f</item>
-        <item name="layout_constraintStart_toStartOf">parent</item>
-        <item name="layout_constraintEnd_toEndOf">parent</item>
-    </style>
-
-    <style name="style_function_white_text">
-        <item name="android:textSize">15sp</item>
-        <item name="android:textColor">@color/white</item>
-        <item name="android:layout_marginTop">10dp</item>
-        <item name="layout_constraintStart_toStartOf">parent</item>
-        <item name="layout_constraintEnd_toEndOf">parent</item>
-    </style>
-
-    <style name="style_strategy_yes_no">
-        <item name="android:layout_width">100dp</item>
+    <style name="Widget.Pwfb.MenuRow.Text" parent="">
+        <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:textAlignment">center</item>
-        <item name="android:textSize">20sp</item>
-        <item name="android:textColor">@color/white</item>
-        <item name="android:layout_marginTop">15dp</item>
-        <item name="android:padding">15dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_marginStart">16dp</item>
+        <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
     </style>
-
-    <style name="style_nutrition_edit_text">
+    <style name="Widget.Pwfb.MenuRow.Chevron" parent="">
+        <item name="android:layout_width">24dp</item>
+        <item name="android:layout_height">24dp</item>
+        <item name="android:src">@drawable/ic_chevron_right</item>
+        <item name="android:tint">?attr/colorOnSurfaceVariant</item>
+    </style>
+    <style name="Widget.Pwfb.MenuRow.Divider" parent="">
         <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_marginTop">5dp</item>
-        <item name="android:paddingVertical">15dp</item>
-        <item name="android:inputType">numberDecimal</item>
-        <item name="android:textSize">15sp</item>
-        <item name="android:textColor">@color/white</item>
-        <item name="android:textColorHint">@color/c_949292</item>
-        <item name="android:textAlignment">center</item>
-        <item name="android:imeOptions">actionDone</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:layout_marginStart">60dp</item>
+        <item name="android:background">?attr/colorOutlineVariant</item>
     </style>
 
-    <style name="style_calendar_time">
-        <item name="android:textSize">17sp</item>
-        <item name="android:textColor">@color/white</item>
+    <!-- 바텀시트: 위쪽 모서리 28dp -->
+    <style name="ThemeOverlay.Pwfb.BottomSheetDialog" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/Widget.Pwfb.BottomSheet</item>
     </style>
-
-    <style name="TimePickerTheme" parent="Theme.AppCompat.Light.Dialog">
-        <item name="android:background">@color/c_242323</item>
-        <item name="android:textColor">@color/white</item>
-        <item name="android:textColorPrimary">@color/white</item>
-        <item name="android:timePickerStyle">@style/TimePickerStyle</item>
-
+    <style name="Widget.Pwfb.BottomSheet" parent="Widget.Material3.BottomSheet.Modal">
+        <item name="backgroundTint">?attr/colorSurfaceContainerLow</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Pwfb.BottomSheet</item>
     </style>
-    <style name="TimePickerStyle" parent="@android:style/Widget.Material.Light.TimePicker">
-        <item name="android:timePickerMode">spinner</item>
-    </style>
-
-    <!-- CalenderView-->
-    <style name="CalenderViewCustom" parent="Theme.AppCompat">
-        <item name="colorAccent">@color/c_31caab3f</item>
-        <item name="android:textStyle">bold</item>
-    </style>
-    <!-- CalenderView 요일-->
-    <style name="CalenderViewWeekCustomText">
-        <item name="android:textColor">@color/c_949292</item>
-        <item name="android:textSize">17sp</item>
-    </style>
-    <!-- CalenderView 날짜-->
-    <style name="CalenderViewDateCustomText">
-        <item name="android:textColor">@color/white</item>
-        <item name="android:textSize">20sp</item>
-    </style>
-    <!-- CalenderView 헤더-->
-    <style name="CalendarWidgetHeader">
-        <item name="android:textColor">@color/white</item>
-        <item name="android:textSize">17sp</item>
-        <item name="android:gravity">start</item>
-    </style>
-
-    <style name="AppBottomSheetDialogTheme"
-        parent="Theme.Design.Light.BottomSheetDialog">
-        <item name="bottomSheetStyle">@style/AppModalStyle</item>
-    </style>
-
-    <style name="AppModalStyle"
-        parent="Widget.Design.BottomSheet.Modal">
-        <item name="android:background">@drawable/shape_dialog</item>
+    <style name="ShapeAppearance.Pwfb.BottomSheet" parent="ShapeAppearance.Material3.Corner.ExtraLarge">
+        <item name="cornerSizeTopLeft">28dp</item>
+        <item name="cornerSizeTopRight">28dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
     </style>
 </resources>

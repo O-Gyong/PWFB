@@ -19,6 +19,7 @@ import com.google.android.play.core.install.model.UpdateAvailability
 import com.pwfb.R
 import com.pwfb.ui.MainActivity
 import com.pwfb.ui.setting.NameActivity
+import com.pwfb.util.enablePwfbEdgeToEdge
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
@@ -37,6 +38,7 @@ class SplashActivity: AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
+        enablePwfbEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
 

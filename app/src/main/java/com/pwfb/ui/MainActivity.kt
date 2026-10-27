@@ -18,6 +18,8 @@ import com.pwfb.ui.home.HomeFragment
 import com.pwfb.ui.nutrition.NutritionFragment
 import com.pwfb.ui.profile.ProfileFragment
 import com.pwfb.ui.training.TrainingFragment
+import com.pwfb.util.applyMainInsets
+import com.pwfb.util.enablePwfbEdgeToEdge
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -26,7 +28,7 @@ class MainActivity : AppCompatActivity() {
 
     /**
      * 하단 탭 정보. 탭 Fragment는 한 번만 만들어 두고, 전환할 때는 보이기/숨기기
-     * (입력 중인 값, 스크롤, 달력 선택 상태가 탭을 오가도 유지)
+     * (입력 중인 값, 스크롤 상태가 탭을 오가도 유지)
      */
     private class Tab(
         @IdRes val menuId: Int,
@@ -43,10 +45,12 @@ class MainActivity : AppCompatActivity() {
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enablePwfbEdgeToEdge()
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.clMain.applyMainInsets(binding.llBottom)
 
         binding.adView.loadAd(AdRequest.Builder().build())
 
@@ -65,6 +69,8 @@ class MainActivity : AppCompatActivity() {
             tabs.firstOrNull { it.menuId == item.itemId }?.let { showTab(it) }
             true
         }
+        // 이미 선택된 탭을 다시 누르면 아무것도 하지 않는다
+        binding.mainBnv.setOnItemReselectedListener { }
     }
 
     private fun addTabs() {
@@ -88,6 +94,8 @@ class MainActivity : AppCompatActivity() {
 
         supportFragmentManager.commit {
             setReorderingAllowed(true)
+            // 들어오는 탭은 살짝 떠오르며, 나가는 탭은 빠르게 사라진다
+            setCustomAnimations(R.anim.tab_enter, R.anim.tab_exit)
             tabs.forEach { tab ->
                 val fragment = supportFragmentManager.findFragmentByTag(tab.tag) ?: return@forEach
                 if (tab === target) {
@@ -109,7 +117,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * 입력칸 바깥을 터치했을 때만 키보드 내리기
+     * 입력칸 바깥을 터치했을 때만 키보드 내리기 (포커스가 빠지면서 입력값이 저장된다)
      */
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         if (ev.action == MotionEvent.ACTION_DOWN) {

@@ -20,7 +20,8 @@
 - **D-Day**는 달력 날짜 기준으로 계산합니다. 대회 3일 전이면 시각과 관계없이 `D-3`입니다.
 - 영양·트레이닝 전략은 `D-7 ~ D-1` 구간에서 날짜별로 바뀌고, 그 외 기간은 평소 섭취를 안내합니다.
 - Play 스토어에서 설치된 앱은 시작 시 **즉시 업데이트**를 요구하며, 사용자가 업데이트를 취소하면 앱이 종료됩니다. 로컬 빌드는 이 검사를 건너뜁니다.
-- 다크 모드는 지원하지 않습니다(항상 라이트 테마).
+- UI는 Material 3 다크 테마로 고정이며(시스템 라이트/다크 설정과 무관), 서체는 Pretendard Std를 번들합니다(`licenses/Pretendard-OFL.txt`).
+- 영양 섭취량과 운동 계획은 입력칸에서 포커스가 빠질 때(입력칸 밖 터치, 탭 이동, 완료 키) 자동 저장됩니다.
 
 ## 기술 구성
 
@@ -28,7 +29,8 @@
 - Hilt(KSP) 의존성 주입, Preferences DataStore 저장
 - 구조: `ui`(Activity/Fragment/ViewModel) → `domain`(UseCase/Repository 인터페이스/Entity) → `data`(Repository 구현, Hilt 모듈)
 - Firebase: Analytics, Crashlytics, Storage(오류 로그 업로드)
-- AdMob 배너, Play In-App Update, material-calendarview
+- AdMob 배너, Play In-App Update
+- 날짜·시간 선택은 Material `MaterialDatePicker` / `MaterialTimePicker` 사용
 
 버전은 `gradle/libs.versions.toml`에서 관리합니다. AGP 9 내장 Kotlin을 사용하므로 `org.jetbrains.kotlin.android` 플러그인은 모듈에 적용하지 않고 루트에 버전만 선언합니다.
 
@@ -78,6 +80,8 @@
 - 저장 실패 등 오류 로그는 `files/logs/<날짜>.txt`에 기록되고 7일이 지나면 삭제됩니다. 백업에는 포함되지 않습니다.
 - 프로필의 "로그 전송"은 오늘 로그를 Firebase Storage `logs/<날짜>/<앱 설치 ID>.txt`로 업로드합니다.
 
-## 알려진 제약
+## 디자인 토큰
 
-- `material-calendarview 2.0.1`은 유지보수가 중단된 라이브러리이며 옛 support 라이브러리에 의존하므로 `android.enableJetifier=true`가 필요합니다. 교체 시 jetifier를 제거할 수 있습니다.
+- 색: `res/values/colors.xml`의 `md_*`(Material 3 역할 색)와 `nutrient_*`(영양소별 포인트 색). 레이아웃에서는 `?attr/colorPrimary`처럼 테마 속성으로 참조합니다.
+- 타이포: `Theme.Pwfb`가 Material 3 type scale 전부를 Pretendard로 덮어씁니다. 섹션 머리말은 `TextAppearance.Pwfb.Eyebrow`.
+- 공통 위젯 스타일: `Widget.Pwfb.Card`(기본 카드), `Widget.Pwfb.Card.Hero`(강조 카드), `Widget.Pwfb.Button`(56dp 알약 버튼), `Widget.Pwfb.Button.Tonal`, `Widget.Pwfb.TextInput`.

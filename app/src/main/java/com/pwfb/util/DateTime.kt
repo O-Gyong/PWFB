@@ -78,3 +78,29 @@ fun parseStoredTime(time: String): Pair<Int, Int>? {
     if (hour !in 0..23 || minute !in 0..59) return null
     return hour to minute
 }
+
+/**
+ * 저장용 날짜 문자열. 예) 2026.10.27(화)
+ */
+fun formatDatePref(date: LocalDate): String =
+    date.format(DDAY_DATE_FORMATTER) + getWeekKor(date.year, date.monthValue, date.dayOfMonth)
+
+/**
+ * 저장된 D-Day 문자열("yyyy.MM.dd...")의 앞 10자리를 날짜로 변환. 형식이 올바르지 않으면 null.
+ */
+fun parseDatePref(dDayText: String): LocalDate? {
+    if (dDayText.length < 10) return null
+    return try {
+        LocalDate.parse(dDayText.substring(0, 10), DDAY_DATE_FORMATTER)
+    } catch (e: DateTimeParseException) {
+        null
+    }
+}
+
+/**
+ * 저장된 D-Day 문자열("yyyy.MM.dd(요일) HH:mm⏳")의 시간 부분을 (시, 분)으로 변환. 없거나 올바르지 않으면 null.
+ */
+fun parseTimePref(dDayText: String): Pair<Int, Int>? {
+    if (dDayText.length < 19) return null
+    return parseStoredTime(dDayText.substring(14, 19))
+}

@@ -1,7 +1,6 @@
 package com.pwfb.ui.profile
 
 import android.annotation.SuppressLint
-import android.app.TimePickerDialog
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -18,6 +17,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.firebase.installations.FirebaseInstallations
 import com.google.firebase.storage.StorageReference
 import com.pwfb.R
+import com.pwfb.databinding.DialogInfoBinding
 import com.pwfb.databinding.FragmentProfileBinding
 import com.pwfb.domain.entity.PrefKey
 import com.pwfb.ui.MainViewModel
@@ -27,19 +27,21 @@ import com.pwfb.util.formatTimeDisplay
 import com.pwfb.util.formatTimeStore
 import com.pwfb.util.getCurrentToday
 import com.pwfb.util.parseDatePref
-import com.pwfb.util.parseStoredTime
-import com.pwfb.util.setupPwfbCalendar
-import com.pwfb.util.showSelectedPwfbDate
+import com.pwfb.util.parseTimePref
+import com.pwfb.util.reattachPwfbPickers
+import com.pwfb.util.showPwfbDatePicker
+import com.pwfb.util.showPwfbTimePicker
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.io.File
-import java.util.Calendar
+import java.time.LocalDate
+import java.time.LocalTime
 import javax.inject.Inject
 
 
 @AndroidEntryPoint
-@SuppressLint("SetTextI18n", "InflateParams")
+@SuppressLint("SetTextI18n")
 class ProfileFragment : Fragment() {
 
     private var _binding: FragmentProfileBinding? = null
@@ -49,8 +51,10 @@ class ProfileFragment : Fragment() {
     @Inject
     lateinit var logStorageReference: StorageReference
 
-    private var dDayPref = ""
-    private var timePref = ""
+    // 화면에서 고른(아직 저장 전일 수 있는) 대회 날짜·시간·체중
+    private var dDayDate: LocalDate? = null
+    private var timeHour = 0
+    private var timeMinute = 0
     private var weightPref = 0.0
     private var weight = 0.0
 
@@ -69,8 +73,8 @@ class ProfileFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         setOnClickListener()
-        setCalendarView()
         viewModelObserve()
+        childFragmentManager.reattachPwfbPickers(::onDatePicked, ::onTimePicked)
 
         init()
     }
@@ -83,28 +87,40 @@ class ProfileFragment : Fragment() {
     }
 
     private fun init() {
+        val info = DialogInfoBinding.inflate(layoutInflater)
+        val versionName = runCatching {
+            requireContext().packageManager.getPackageInfo(requireContext().packageName, 0).versionName
+        }.getOrNull() ?: "-"
+        info.tvVersion.text = getString(R.string.app_version_format, versionName)
+
         infoDialog = BottomSheetDialog(requireContext()).apply {
-            setContentView(layoutInflater.inflate(R.layout.dialog_info, null))
+            setContentView(info.root)
         }
     }
 
     private fun setOnClickListener() {
         binding.btModify.setOnClickListener {
-            viewModel.save(PrefKey.D_DAY, "$dDayPref $timePref")
+            dDayDate?.let { date ->
+                viewModel.save(PrefKey.D_DAY, "${formatDatePref(date)} ${formatTimeStore(timeHour, timeMinute)}")
+            }
             viewModel.save(PrefKey.WEIGHT, weight.toString())
         }
 
-        binding.btTime.setOnClickListener {
-            setTimeSpinner()
+        binding.btDate.setOnClickListener {
+            childFragmentManager.showPwfbDatePicker(dDayDate, ::onDatePicked)
         }
 
-        binding.ivMinus.setOnClickListener {
+        binding.btTime.setOnClickListener {
+            childFragmentManager.showPwfbTimePicker(timeHour, timeMinute, ::onTimePicked)
+        }
+
+        binding.btMinus.setOnClickListener {
             weight = (weight*10 - 1).toInt() / 10.0
             binding.tvWeight.text = weight.toString()+"Kg"
             setWeightBtn()
         }
 
-        binding.ivPlus.setOnClickListener {
+        binding.btPlus.setOnClickListener {
             weight = (weight*10 + 1).toInt() / 10.0
             binding.tvWeight.text = weight.toString()+"Kg"
             setWeightBtn()
@@ -129,6 +145,7 @@ class ProfileFragment : Fragment() {
                 launch {
                     viewModel.state(PrefKey.NAME).collectLatest {
                         binding.tvName.text = it
+                        binding.tvAvatar.text = it.trim().firstOrNull()?.toString() ?: "?"
                     }
                 }
 
@@ -151,24 +168,25 @@ class ProfileFragment : Fragment() {
 
                 launch {
                     viewModel.state(PrefKey.D_DAY).collectLatest {
-                        val targetDate = parseDatePref(it) ?: return@collectLatest
-                        dDayPref = it
+                        val savedDate = parseDatePref(it) ?: return@collectLatest
+                        dDayDate = savedDate
+                        binding.btDate.text = formatDatePref(savedDate)
                         setDDay()
 
-                        if(it.length >= 19) setTime(it.substring(14, 19))
-
-                        binding.cvCalendar.showSelectedPwfbDate(targetDate)
+                        val (hour, minute) = parseTimePref(it) ?: LocalTime.now().let { now -> now.hour to now.minute }
+                        timeHour = hour
+                        timeMinute = minute
+                        binding.btTime.text = formatTimeDisplay(hour, minute)
                     }
                 }
 
-                // 체중/D-Day 저장에 성공하면 수정 버튼 비활성화, 실패하면 사용자에게 알림
+                // 체중/D-Day 저장에 성공하면 변경 버튼 비활성화, 실패하면 사용자에게 알림
                 launch {
                     viewModel.saveResult.collect {
                         if(!it.success) {
                             showToast(R.string.save_failed)
                         } else if(it.key == PrefKey.WEIGHT || it.key == PrefKey.D_DAY) {
                             binding.btModify.isEnabled = false
-                            binding.btModify.setTextColor(requireContext().getColor(R.color.c_949292))
                         }
                     }
                 }
@@ -178,6 +196,20 @@ class ProfileFragment : Fragment() {
                 }
             }
         }
+    }
+
+    private fun onDatePicked(date: LocalDate) {
+        dDayDate = date
+        binding.btDate.text = formatDatePref(date)
+        setDDay()
+        binding.btModify.isEnabled = true
+    }
+
+    private fun onTimePicked(hour: Int, minute: Int) {
+        timeHour = hour
+        timeMinute = minute
+        binding.btTime.text = formatTimeDisplay(hour, minute)
+        binding.btModify.isEnabled = true
     }
 
     /**
@@ -213,56 +245,13 @@ class ProfileFragment : Fragment() {
         Toast.makeText(context.applicationContext, messageRes, Toast.LENGTH_SHORT).show()
     }
 
-    private fun setCalendarView() {
-        binding.cvCalendar.setupPwfbCalendar { date ->
-            binding.btModify.isEnabled = true
-            binding.btModify.setTextColor(requireContext().getColor(R.color.white))
-
-            dDayPref = formatDatePref(date)
-            setDDay()
-        }
-    }
-
-    private fun setTime(time: String) {
-        val (hour, minute) = parseStoredTime(time) ?: return
-
-        binding.btTime.text = formatTimeDisplay(hour, minute)
-        timePref = formatTimeStore(hour, minute)
-    }
-
     private fun setDDay() {
-        val dDay = calcDDay(dDayPref) ?: return
+        val date = dDayDate ?: return
+        val dDay = calcDDay(formatDatePref(date)) ?: return
         binding.tvDDay.text = "D$dDay"
     }
 
-    private fun setTimeSpinner() {
-        val cal = Calendar.getInstance()
-
-        val timeSetListener = TimePickerDialog.OnTimeSetListener { _, pHour, pMinute ->
-            binding.btTime.text = formatTimeDisplay(pHour, pMinute)
-            timePref = formatTimeStore(pHour, pMinute)
-        }
-
-        val timePickerDialog = TimePickerDialog(
-            requireContext(),
-            R.style.TimePickerTheme,
-            timeSetListener,
-            cal.get(Calendar.HOUR_OF_DAY),
-            cal.get(Calendar.MINUTE),
-            false
-        )
-        timePickerDialog.setButton(TimePickerDialog.BUTTON_POSITIVE, getString(R.string.confirm), timePickerDialog)
-        timePickerDialog.setButton(TimePickerDialog.BUTTON_NEGATIVE, getString(R.string.cancel), timePickerDialog)
-        timePickerDialog.show()
-    }
-
     private fun setWeightBtn() {
-        if(weightPref != weight) {
-            binding.btModify.isEnabled = true
-            binding.btModify.setTextColor(requireContext().getColor(R.color.white))
-        } else {
-            binding.btModify.isEnabled = false
-            binding.btModify.setTextColor(requireContext().getColor(R.color.c_949292))
-        }
+        binding.btModify.isEnabled = weightPref != weight
     }
 }

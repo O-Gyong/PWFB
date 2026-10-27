@@ -1,6 +1,7 @@
 package com.pwfb.ui.home
 
 import android.annotation.SuppressLint
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,6 +10,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.google.android.material.color.MaterialColors
 import com.pwfb.R
 import androidx.fragment.app.Fragment
 import com.pwfb.common.NutritionObject.nutritionEntityLists
@@ -66,6 +68,7 @@ class HomeFragment : Fragment() {
 
                         binding.tvDDay.text = "D$dDay"
                         binding.tvDate.text = dDayText
+                        renderProgress(dDay)
 
                         binding.lvNutrition.adapter = ListAdapter(nutritionEntityLists, kg, dDay)
 
@@ -113,6 +116,21 @@ class HomeFragment : Fragment() {
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * D-7 → D-DAY 진행 스트립. i번째 칸은 D-(7-i)를 뜻하며, 오늘이 그 날 이후면 채운다.
+     */
+    private fun renderProgress(dDay: Int) {
+        val strip = binding.llProgress
+        val reachedColor = MaterialColors.getColor(strip, androidx.appcompat.R.attr.colorPrimary)
+        val remainingColor = MaterialColors.getColor(strip, com.google.android.material.R.attr.colorOutlineVariant)
+        for (i in 0 until strip.childCount) {
+            val segmentDay = i - (strip.childCount - 1)
+            val reached = dDay >= segmentDay
+            strip.getChildAt(i).backgroundTintList =
+                ColorStateList.valueOf(if (reached) reachedColor else remainingColor)
         }
     }
 }

@@ -1,21 +1,23 @@
 package com.pwfb.ui.setting
 
-import android.app.TimePickerDialog
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import com.pwfb.R
 import com.pwfb.databinding.ActivityDayBinding
 import com.pwfb.domain.entity.PwfbResultEntity
 import com.pwfb.ui.MainActivity
+import com.pwfb.util.applySystemBarInsetsAsPadding
+import com.pwfb.util.enablePwfbEdgeToEdge
 import com.pwfb.util.formatDatePref
 import com.pwfb.util.formatTimeDisplay
 import com.pwfb.util.formatTimeStore
-import com.pwfb.util.setupPwfbCalendar
+import com.pwfb.util.reattachPwfbPickers
+import com.pwfb.util.showPwfbDatePicker
+import com.pwfb.util.showPwfbTimePicker
 import dagger.hilt.android.AndroidEntryPoint
+import java.time.LocalDate
 import java.time.LocalTime
-import java.util.Calendar
 
 
 @AndroidEntryPoint
@@ -24,27 +26,33 @@ class DayActivity : AppCompatActivity() {
     private lateinit var binding: ActivityDayBinding
     private val viewModel: DayViewModel by viewModels()
 
-    private var datePref = ""
-    private var timePref = ""
+    private var date: LocalDate? = null
+    private var timeHour = 0
+    private var timeMinute = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enablePwfbEdgeToEdge()
         super.onCreate(savedInstanceState)
         binding = ActivityDayBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.clName.applySystemBarInsetsAsPadding()
 
-        binding.cvCalendar.setupPwfbCalendar { date ->
-            binding.btGo.isEnabled = true
-            binding.btGo.setTextColor(getColor(R.color.white))
-            datePref = formatDatePref(date)
+        // 시간은 현재 시각을 기본값으로
+        val now = LocalTime.now()
+        onTimePicked(now.hour, now.minute)
+        supportFragmentManager.reattachPwfbPickers(::onDatePicked, ::onTimePicked)
+
+        binding.btDate.setOnClickListener {
+            supportFragmentManager.showPwfbDatePicker(date, ::onDatePicked)
         }
-        getLocalTime()
 
         binding.btTime.setOnClickListener {
-            setTimeSpinner()
+            supportFragmentManager.showPwfbTimePicker(timeHour, timeMinute, ::onTimePicked)
         }
 
         binding.btGo.setOnClickListener {
-            viewModel.setDDay("$datePref $timePref")
+            val picked = date ?: return@setOnClickListener
+            viewModel.setDDay("${formatDatePref(picked)} ${formatTimeStore(timeHour, timeMinute)}")
         }
 
         viewModel.dDayObserve.observe(this) {
@@ -63,31 +71,15 @@ class DayActivity : AppCompatActivity() {
         }
     }
 
-    private fun getLocalTime() {
-        val localTime = LocalTime.now()
-
-        binding.btTime.text = formatTimeDisplay(localTime.hour, localTime.minute)
-        timePref = formatTimeStore(localTime.hour, localTime.minute)
+    private fun onDatePicked(picked: LocalDate) {
+        date = picked
+        binding.btDate.text = formatDatePref(picked)
+        binding.btGo.isEnabled = true
     }
 
-    private fun setTimeSpinner() {
-        val cal = Calendar.getInstance()
-
-        val timeSetListener = TimePickerDialog.OnTimeSetListener { _, pHour, pMinute ->
-            binding.btTime.text = formatTimeDisplay(pHour, pMinute)
-            timePref = formatTimeStore(pHour, pMinute)
-        }
-
-        val timePickerDialog = TimePickerDialog(
-            this,
-            R.style.TimePickerTheme,
-            timeSetListener,
-            cal.get(Calendar.HOUR_OF_DAY),
-            cal.get(Calendar.MINUTE),
-            false
-        )
-        timePickerDialog.setButton(TimePickerDialog.BUTTON_POSITIVE, getString(R.string.confirm), timePickerDialog)
-        timePickerDialog.setButton(TimePickerDialog.BUTTON_NEGATIVE, getString(R.string.cancel), timePickerDialog)
-        timePickerDialog.show()
+    private fun onTimePicked(hour: Int, minute: Int) {
+        timeHour = hour
+        timeMinute = minute
+        binding.btTime.text = formatTimeDisplay(hour, minute)
     }
 }

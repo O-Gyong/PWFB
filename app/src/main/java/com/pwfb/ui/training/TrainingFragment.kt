@@ -1,13 +1,10 @@
 package com.pwfb.ui.training
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -38,16 +35,11 @@ class TrainingFragment : Fragment() {
     ): View {
         _binding = FragmentTrainingBinding.inflate(inflater, container, false)
 
-
-        binding.etTrainingProgram.setOnEditorActionListener { _, action, _ ->
-            var handled = false
-            if(action == EditorInfo.IME_ACTION_DONE) {
+        // 여러 줄 입력이라 완료 키가 없으므로, 입력칸 밖을 누르거나 탭을 옮겨 포커스가 빠질 때 저장한다
+        binding.etTrainingProgram.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
                 viewModel.save(PrefKey.TRAINING_PROGRAM, binding.etTrainingProgram.text.toString())
-                val inputMethodManager = requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                inputMethodManager.hideSoftInputFromWindow(requireActivity().currentFocus?.windowToken, 0)
-                handled = true
             }
-            handled
         }
 
         return binding.root
@@ -71,8 +63,8 @@ class TrainingFragment : Fragment() {
                     viewModel.state(PrefKey.D_DAY).collectLatest {
                         val dDay = calcDDay(it) ?: return@collectLatest
 
-                        binding.tvDDay.text = "D$dDay"
-                        binding.tvDate.text = it
+                        binding.header.tvDDay.text = "D$dDay"
+                        binding.header.tvDate.text = it
                         setTextDDay(dDay)
                     }
                 }
@@ -98,28 +90,13 @@ class TrainingFragment : Fragment() {
     }
 
     private fun setTextDDay(dDay: Int) {
-        when(dDay) {
-            -7 -> {
-                binding.tvTraining.text = getString(R.string.nutrition_usually_intake, "\uD83C\uDFCB")
-            }
-            -6 -> {
-                binding.tvTraining.text = getString(R.string.training_day_6)
-            }
-            -5, -4 -> {
-                binding.tvTraining.text = getString(R.string.training_day_54)
-            }
-            -3 -> {
-                binding.tvTraining.text = getString(R.string.training_day_3)
-            }
-            -2 -> {
-                binding.tvTraining.text = getString(R.string.training_day_2)
-            }
-            -1 -> {
-                binding.tvTraining.text = getString(R.string.training_day_1)
-            }
-            else -> {
-                binding.tvTraining.text = getString(R.string.nutrition_usually_intake, "\uD83C\uDFCB")
-            }
+        binding.tvTraining.text = when(dDay) {
+            -6 -> getString(R.string.training_day_6)
+            -5, -4 -> getString(R.string.training_day_54)
+            -3 -> getString(R.string.training_day_3)
+            -2 -> getString(R.string.training_day_2)
+            -1 -> getString(R.string.training_day_1)
+            else -> getString(R.string.nutrition_usually_intake, "🏋")
         }
     }
 }

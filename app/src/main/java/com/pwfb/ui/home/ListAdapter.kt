@@ -5,8 +5,10 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.pwfb.common.NutritionObject
-import com.pwfb.databinding.ListNutritionBinding
+import com.pwfb.databinding.ItemNutritionBinding
 import com.pwfb.domain.entity.NutritionEntity
+import com.pwfb.ui.NutrientUi
+import com.pwfb.ui.showNutrientAvatar
 
 class ListAdapter(
     private val nutritionEntityList: List<NutritionEntity>,
@@ -14,10 +16,11 @@ class ListAdapter(
     private val dDay: Int
 ): RecyclerView.Adapter<ListAdapter.ViewHolder>() {
     inner class ViewHolder(
-        private val binding: ListNutritionBinding
+        private val binding: ItemNutritionBinding
     ): RecyclerView.ViewHolder(binding.root) {
         fun bind(nutritionEntity: NutritionEntity) {
             val context = binding.root.context
+            binding.tvEmoji.showNutrientAvatar(NutrientUi.of(nutritionEntity.type))
             binding.tvExplain.setText(nutritionEntity.explainRes)
 
             val intake = NutritionIntake.of(nutritionEntity.type, dDay, kg)
@@ -31,7 +34,7 @@ class ListAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding =
-            ListNutritionBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            ItemNutritionBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ViewHolder(binding)
     }
 

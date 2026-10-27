@@ -124,12 +124,6 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
-    // CalendarView (유지보수 중단 라이브러리. 옛 support 라이브러리에 의존하므로 android.enableJetifier 필요)
-    implementation(libs.material.calendarview)
-
-    // CalendarView 년 월 표시
-    implementation(libs.threetenabp)
-
     // 애드몹
     implementation(libs.play.services.ads)
 
