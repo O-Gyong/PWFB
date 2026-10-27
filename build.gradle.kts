@@ -1,8 +1,11 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
+// 버전은 gradle/libs.versions.toml에서 관리한다.
 plugins {
-    id("com.android.application") version "8.1.2" apply false
-    id("org.jetbrains.kotlin.android") version "1.9.0" apply false
-    id("com.google.dagger.hilt.android") version "2.46" apply false
-    id("com.google.gms.google-services") version "4.4.2" apply false
-    id("com.google.firebase.crashlytics") version "2.9.9" apply false
+    alias(libs.plugins.android.application) apply false
+    // 모듈에는 적용하지 않음. AGP 내장 Kotlin이 사용할 Kotlin(KGP) 버전을 지정하기 위한 선언.
+    alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.ksp) apply false
+    alias(libs.plugins.hilt) apply false
+    alias(libs.plugins.google.services) apply false
+    alias(libs.plugins.firebase.crashlytics) apply false
 }
