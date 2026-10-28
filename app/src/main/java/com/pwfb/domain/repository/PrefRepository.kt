@@ -1,86 +1,25 @@
 package com.pwfb.domain.repository
 
+import com.pwfb.domain.entity.PrefKey
 import com.pwfb.domain.entity.PwfbResultEntity
 import kotlinx.coroutines.flow.Flow
 
 interface PrefRepository {
 
     /**
-     * 이름 설정
+     * 설정 값 관찰. 저장된 값이 없으면 PrefKey.default를 방출한다.
      */
-    suspend fun setName(name: String): PwfbResultEntity
-    suspend fun getName(): Flow<String>
+    fun observe(key: PrefKey): Flow<String>
 
     /**
-     * 최초 진입 여부 설정
+     * 설정 값 저장
      */
-    suspend fun setFistInit(): PwfbResultEntity
-    suspend fun getFirstInit(): Flow<Boolean>
+    suspend fun set(key: PrefKey, value: String): PwfbResultEntity
 
     /**
-     * 몸무게 설정
+     * 최초 진입 여부. 저장된 값이 없으면 최초 진입(true)으로 판단한다.
      */
-    suspend fun setWeight(weight: String): PwfbResultEntity
-    suspend fun getWeight(): Flow<String>
+    fun observeFirstInit(): Flow<Boolean>
 
-    /**
-     * D-Day 설정
-     */
-    suspend fun setDDay(dDay: String): PwfbResultEntity
-    suspend fun getDDay(): Flow<String>
-
-    /**
-     * 운동 계획 설정
-     */
-    suspend fun setTrainingProgram(trainingProgram: String): PwfbResultEntity
-    suspend fun getTrainingProgram(): Flow<String>
-
-    /**
-     * 탄수화물 설정
-     */
-    suspend fun setCarbohydrate(carbohydrate: String): PwfbResultEntity
-    suspend fun getCarbohydrate(): Flow<String>
-
-    /**
-     * 단백질 설정
-     */
-    suspend fun setProtein(protein: String): PwfbResultEntity
-    suspend fun getProtein(): Flow<String>
-
-    /**
-     * 지방 설정
-     */
-    suspend fun setFat(fat: String): PwfbResultEntity
-    suspend fun getFat(): Flow<String>
-
-    /**
-     * 수분 설정
-     */
-    suspend fun setWater(water: String): PwfbResultEntity
-    suspend fun getWater(): Flow<String>
-
-    /**
-     * 나트륨 설정
-     */
-    suspend fun setSodium(sodium: String): PwfbResultEntity
-    suspend fun getSodium(): Flow<String>
-
-    /**
-     * 칼륨 설정
-     */
-    suspend fun setPotassium(potassium: String): PwfbResultEntity
-    suspend fun getPotassium(): Flow<String>
-
-    /**
-     * 크레아틴 설정
-     */
-    suspend fun setCreatine(creatine: String): PwfbResultEntity
-    suspend fun getCreatine(): Flow<String>
-
-    /**
-     * 식이 섬유 설정
-     */
-    suspend fun setDietaryFiber(dietaryFiber: String): PwfbResultEntity
-    suspend fun getDietaryFiber(): Flow<String>
-
+    suspend fun setFirstInit(): PwfbResultEntity
 }

@@ -1,12 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
-    <color name="c_7a7878">#7A7878</color>
-    <color name="c_caab3f">#CAAB3F</color>
-    <color name="c_48caab3f">#48CAAB3F</color>
-    <color name="c_242323">#242323</color>
-    <color name="c_ff191616">#FF191616</color>
-    <color name="c_949292">#949292</color>
-    <color name="c_46949292">#46949292</color>
+    <!-- 팔레트는 theme/Color.kt(Compose)에 있다. 여기는 Activity 창 배경 등 XML에서 필요한 값만 둔다. -->
+    <color name="md_surface">#121110</color>
 </resources>

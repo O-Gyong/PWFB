@@ -18,3 +18,8 @@ google-services.json
 *.hprof
 gen-external-apklibs
 /app/release/
+/app/google-services.json
+/pwfb-keystore.jks.b64
+
+# Kotlin 컴파일러 세션 캐시
+.kotlin/

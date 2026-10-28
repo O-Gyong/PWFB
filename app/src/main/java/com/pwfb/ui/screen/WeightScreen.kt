@@ -1,135 +1,81 @@
 package com.pwfb.ui.screen
 
-import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.TextField
-import androidx.compose.material.TextFieldDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
-import com.pwfb.ui.viewmodel.WeightViewModel
 import com.pwfb.R
-import com.pwfb.common.DataStoreResult.SET_WEIGHT
-import com.pwfb.common.ScreenName.SCREEN_DAY
-import com.pwfb.theme.Black
-import com.pwfb.theme.DataStoreTheme
-import com.pwfb.theme.SettingTextFieldTypography
-import com.pwfb.theme.SettingTitleTypography
-import com.pwfb.theme.White
-import com.pwfb.theme.Yellow40
+import com.pwfb.theme.PwfbTheme
+import com.pwfb.ui.viewmodel.WeightViewModel
 
-
+/**
+ * 온보딩 2단계: 공복 체중
+ */
 @Composable
 fun WeightScreen(
-    navController: NavHostController,
-    weightViewModel: WeightViewModel = hiltViewModel()
+    onNext: () -> Unit,
+    onSaveFailed: () -> Unit,
+    viewModel: WeightViewModel = hiltViewModel()
 ) {
-
-    BackHandler(enabled = true) {
-        navController.navigate("name") {
-            popUpTo("name") { inclusive = true }
-        }
+    LaunchedEffect(viewModel) {
+        viewModel.saved.collect { success -> if (success) onNext() else onSaveFailed() }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp)
-            .padding(top = 20.dp)
+    WeightContent(onSubmit = viewModel::setWeight)
+}
+
+@Composable
+private fun WeightContent(onSubmit: (String) -> Unit) {
+    var weight by rememberSaveable { mutableStateOf("") }
+    val isValid = WeightViewModel.isValidWeight(weight)
+    val showError = weight.isNotBlank() && !isValid
+
+    OnboardingStep(
+        step = 2,
+        title = stringResource(R.string.kr_empty_stomach_weight),
+        subtitle = stringResource(R.string.weight_subtitle),
+        buttonText = stringResource(R.string.next),
+        buttonEnabled = isValid,
+        onButtonClick = { onSubmit(weight) }
     ) {
-        Text(
-            text = stringResource(id = R.string.kr_empty_stomach_weight),
-            style = SettingTitleTypography.bodyLarge
+        OutlinedTextField(
+            value = weight,
+            onValueChange = { weight = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text(stringResource(R.string.input_weight)) },
+            suffix = { Text(stringResource(R.string.unit_kg)) },
+            singleLine = true,
+            isError = showError,
+            supportingText = if (showError) {
+                { Text(stringResource(R.string.weight_invalid)) }
+            } else {
+                null
+            },
+            shape = MaterialTheme.shapes.medium,
+            textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = 20.sp),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { if (isValid) onSubmit(weight) })
         )
-
-        var weight by remember { mutableStateOf("") }
-
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .weight(1f),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            SetWeightView(
-                weight,
-                onWeightChange = { newWeight->
-                    weight = newWeight
-                }
-            )
-        }
-
-        NextButtonView(
-            isDday = false,
-            textValue = weight,
-            onClick = {weightViewModel.setWeight(weight)}
-        )
-
-        LaunchedEffect(weightViewModel.weightObserve) {
-            if(weightViewModel.weightObserve == SET_WEIGHT) {
-                navController.navigate(SCREEN_DAY)
-            }
-        }
     }
 }
 
+@Preview(showBackground = true, backgroundColor = 0xFF121110)
 @Composable
-fun SetWeightView(weight: String, onWeightChange:(String)->Unit) {
-    TextField(
-        modifier = Modifier
-            .width(150.dp)
-            .background(Black),
-        value = weight,
-        textStyle = SettingTextFieldTypography.bodyLarge.copy(
-            textAlign = TextAlign.Center
-        ),
-        singleLine = true,
-        colors = TextFieldDefaults.textFieldColors(
-            cursorColor = White,
-            backgroundColor = Color.Transparent,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent
-        ),
-        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-        onValueChange = {
-            onWeightChange(it)
-        }
-    )
-
-    Text(
-        text = stringResource(id = R.string.kg),
-        style = SettingTextFieldTypography.bodyLarge.copy(color = Yellow40)
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun WeightPreview() {
-    DataStoreTheme {
-        val navController = rememberNavController()
-        WeightScreen(navController = navController)
-    }
+private fun WeightPreview() {
+    PwfbTheme { WeightContent(onSubmit = {}) }
 }

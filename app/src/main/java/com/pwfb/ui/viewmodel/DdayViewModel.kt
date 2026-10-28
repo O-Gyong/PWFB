@@ -1,90 +1,46 @@
 package com.pwfb.ui.viewmodel
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.prolificinteractive.materialcalendarview.CalendarDay
-import com.pwfb.common.DataStoreResult
+import com.pwfb.domain.entity.PrefKey
 import com.pwfb.domain.entity.PwfbResultEntity
-import com.pwfb.domain.usecase.DdayUseCase
+import com.pwfb.domain.usecase.PrefUseCase
+import com.pwfb.util.formatDatePref
+import com.pwfb.util.formatTimeStore
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
 import javax.inject.Inject
 
+/**
+ * 온보딩 3단계: 대회 D-Day 저장 + 최초 진입 완료 처리
+ */
 @HiltViewModel
 class DdayViewModel @Inject constructor(
-    private val dDayUseCase: DdayUseCase
-): ViewModel() {
+    private val prefUseCase: PrefUseCase
+) : ViewModel() {
 
-    var dDayState by mutableStateOf("")
-        private set
+    // D-Day 저장과 최초 진입 완료 처리가 모두 성공했는지
+    private val _completed = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
+    val completed: SharedFlow<Boolean> = _completed.asSharedFlow()
 
-    var firstInitState by mutableStateOf(true)
-        private set
-
-    fun setDDay(dDay: String) {
+    fun setDDay(date: LocalDate, hour: Int, minute: Int) {
         viewModelScope.launch {
-            when(dDayUseCase.setDday(dDay)) {
-                is PwfbResultEntity.Success -> {
-                    dDayState = DataStoreResult.SET_D_DAY
-                }
-                else -> {
-                    // todo Failure
-                }
+            val saved = prefUseCase.set(PrefKey.D_DAY, toDDayText(date, hour, minute))
+            if (saved !is PwfbResultEntity.Success) {
+                _completed.emit(false)
+                return@launch
             }
+            _completed.emit(prefUseCase.setFirstInit() is PwfbResultEntity.Success)
         }
     }
 
-    fun setFirstInit() {
-        viewModelScope.launch {
-            when(dDayUseCase.setFistInit()) {
-                is PwfbResultEntity.Success -> {
-                    firstInitState = DataStoreResult.SET_FIRST_INIT
-                }
-                else -> {
-                    // todo Failure
-                }
-            }
-        }
-    }
-
-    fun setDate(date: CalendarDay): String {
-        val month = if(date.month<10) "0${date.month}" else "${date.month}"
-        val day = if(date.day<10) "0${date.day}" else "${date.day}"
-        val week = when(LocalDate.of(date.year, date.month, date.day).dayOfWeek.value) {
-            1 -> "(월)"
-            2 -> "(화)"
-            3 -> "(수)"
-            4 -> "(목)"
-            5 -> "(금)"
-            6 -> "(토)"
-            7 -> "(일)"
-            else -> ""
-        }
-        return "${date.year}.$month.$day$week"
-    }
-
-    fun setCurrentTime(): String {
-        val localTime = LocalDateTime.now().toLocalTime()
-        return updateTime(localTime)
-    }
-
-    fun updateTime(snappedTime: LocalTime): String {
-        val amPm = if(snappedTime.hour < 12) "오전" else "오후"
-
-        val hour = if(amPm == "오후") {
-            if((snappedTime.hour - 12)<10) "0${(snappedTime.hour - 12)}" else "${(snappedTime.hour - 12)}"
-        } else {
-            if(snappedTime.hour < 10) "0${snappedTime.hour}" else "${snappedTime.hour}"
-        }
-
-        val minute = if(snappedTime.minute < 10) "0${snappedTime.minute}" else "${snappedTime.minute}"
-
-        return  "$amPm $hour:$minute"
+    companion object {
+        /** 저장 형식: "yyyy.MM.dd(요일) HH:mm⏳" */
+        fun toDDayText(date: LocalDate, hour: Int, minute: Int): String =
+            "${formatDatePref(date)} ${formatTimeStore(hour, minute)}"
     }
 }

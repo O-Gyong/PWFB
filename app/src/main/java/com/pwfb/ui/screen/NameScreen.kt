@@ -1,121 +1,73 @@
 package com.pwfb.ui.screen
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.material.TextField
-import androidx.compose.material.TextFieldDefaults
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.pwfb.R
-import com.pwfb.common.DataStoreResult.SET_NAME
-import com.pwfb.common.ScreenName.SCREEN_WEIGHT
-import com.pwfb.theme.Black
-import com.pwfb.theme.DataStoreTheme
-import com.pwfb.theme.Gray
-import com.pwfb.theme.SettingTextFieldTypography
-import com.pwfb.theme.SettingTitleTypography
-import com.pwfb.theme.White
+import com.pwfb.theme.PwfbTheme
 import com.pwfb.ui.viewmodel.NameViewModel
 
+/**
+ * 온보딩 1단계: 이름
+ */
 @Composable
 fun NameScreen(
-    navController: NavHostController,
-    nameViewModel: NameViewModel = hiltViewModel()
+    onNext: () -> Unit,
+    onSaveFailed: () -> Unit,
+    viewModel: NameViewModel = hiltViewModel()
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 20.dp)
-            .padding(top = 20.dp),
+    LaunchedEffect(viewModel) {
+        viewModel.saved.collect { success -> if (success) onNext() else onSaveFailed() }
+    }
+
+    NameContent(onSubmit = viewModel::setName)
+}
+
+@Composable
+private fun NameContent(onSubmit: (String) -> Unit) {
+    var name by rememberSaveable { mutableStateOf("") }
+    val canProceed = name.isNotBlank()
+
+    OnboardingStep(
+        step = 1,
+        title = stringResource(R.string.welcome),
+        subtitle = stringResource(R.string.welcome_subtitle),
+        buttonText = stringResource(R.string.next),
+        buttonEnabled = canProceed,
+        onButtonClick = { onSubmit(name) }
     ) {
-        Text(
-            text = stringResource(id = R.string.welcome),
-            style = SettingTitleTypography.bodyLarge
-        )
-
-        var name by remember { mutableStateOf("") }
-
-        LaunchedEffect(nameViewModel.nameObserve) {->
-            if(nameViewModel.nameObserve == SET_NAME) {
-                navController.navigate(SCREEN_WEIGHT)
-            }
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            Arrangement.Center,
-            Alignment.CenterHorizontally
-        ) {
-            SetNameView(
-                name,
-                onNameChange= {newName->
-                    name=newName
-                }
-            )
-        }
-
-        NextButtonView(
-            isDday = false,
-            textValue = name,
-            onClick = {nameViewModel.setName(name)}
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text(stringResource(R.string.input_name)) },
+            singleLine = true,
+            shape = MaterialTheme.shapes.medium,
+            textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = 20.sp),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { if (canProceed) onSubmit(name) })
         )
     }
 }
 
+@Preview(showBackground = true, backgroundColor = 0xFF121110)
 @Composable
-fun SetNameView(name: String, onNameChange:(String)->Unit) {
-    TextField(
-        modifier = Modifier
-            .wrapContentWidth()
-            .background(Black),
-        value = name,
-        textStyle = SettingTextFieldTypography.bodyLarge.copy(textAlign = TextAlign.Center),
-        colors = TextFieldDefaults.textFieldColors(
-            cursorColor = White,
-            backgroundColor = Color.Transparent, // 밑줄을 제거하려면 배경색을 투명으로 지정
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent
-        ),
-        placeholder = {
-            Text(
-                text = stringResource(id = R.string.input_name),
-                color = Gray,
-                style = SettingTextFieldTypography.labelLarge
-            )
-        },
-        onValueChange = {
-            onNameChange(it)
-        }
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun NamePreview() {
-    DataStoreTheme {
-        val navController = rememberNavController()
-        NameScreen(navController = navController)
-    }
+private fun NamePreview() {
+    PwfbTheme { NameContent(onSubmit = {}) }
 }

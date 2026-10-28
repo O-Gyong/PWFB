@@ -1,98 +1,158 @@
 package com.pwfb.ui.splash
 
-import android.animation.Animator
-import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
-import android.view.View
-import android.view.ViewTreeObserver
-import android.view.animation.AnticipateInterpolator
+import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.animation.doOnEnd
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import com.google.android.play.core.appupdate.AppUpdateManager
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.appupdate.AppUpdateOptions
+import com.google.android.play.core.install.model.AppUpdateType
+import com.google.android.play.core.install.model.UpdateAvailability
 import com.pwfb.R
-import com.pwfb.base.BaseActivity
+import com.pwfb.theme.PwfbTheme
 import com.pwfb.ui.MainActivity
+import com.pwfb.ui.screen.Eyebrow
+import com.pwfb.util.enablePwfbEdgeToEdge
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.launch
 
 @SuppressLint("CustomSplashScreen")
 @AndroidEntryPoint
-class SplashActivity: BaseActivity() {
+class SplashActivity : ComponentActivity() {
+    companion object {
+        private const val UPDATE_REQUEST_CODE = 100
+    }
+
     private val viewModel: SplashViewModel by viewModels()
+    private val appUpdateManager: AppUpdateManager by lazy {
+        AppUpdateManagerFactory.create(applicationContext)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.d(PWFB, "SplashActivity onCreate")
-
-        installSplashScreen()
+        val splashScreen = installSplashScreen()
+        enablePwfbEdgeToEdge()
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_splash)
-
-        // 다크모드 비활성화
-        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-
-        /**
-         * 스플래시 탐지
-         */
-        val content: View = findViewById(android.R.id.content)
-        content.viewTreeObserver.addOnPreDrawListener(
-            object : ViewTreeObserver.OnPreDrawListener {
-                override fun onPreDraw(): Boolean {
-                    return if (!viewModel.isLoading.value) {
-                        content.viewTreeObserver.removeOnPreDrawListener(this)
-                        true
-                    } else {
-                        false
-                    }
-                }
-            }
-        )
-
-        /**
-         * 스플래시 끝나고 애니메이션 적용
-         */
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            splashScreen.setOnExitAnimationListener { splashScreenView ->
-                ObjectAnimator.ofFloat(
-                    splashScreenView,
-                    View.TRANSLATION_Y,
-                    0f,
-                    -splashScreenView.height.toFloat()
-                ).run {
-                    interpolator = AnticipateInterpolator()
-                    duration = 0L
-                    doOnEnd { splashScreenView.remove() }
-                    start()
-                    addListener(object : Animator.AnimatorListener{
-                        override fun onAnimationStart(p0: Animator) {
-                        }
-                        override fun onAnimationEnd(p0: Animator) {
-                            viewModel.getFirstInit()
-                        }
-                        override fun onAnimationCancel(p0: Animator) {
-                        }
-                        override fun onAnimationRepeat(p0: Animator) {
-                        }
-                    })
-                }
-            }
-        } else {
-            viewModel.getFirstInit()
+        setContent {
+            PwfbTheme { SplashContent() }
         }
 
-        viewModel.firstInitObserve.observe(this) {
-            runBlocking { delay(2000) }
+        // 최초 진입 여부를 읽을 때까지 스플래시 유지
+        splashScreen.setKeepOnScreenCondition { viewModel.firstInitObserve.value == null }
 
-            // 앱 첫 진입으로 판단 -> 설정 화면 이동
-            val intent = Intent(applicationContext, MainActivity::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-            intent.putExtra("isFirstInit", it)
-            startActivity(intent)
-            finish()
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.firstInitObserve.filterNotNull().collect { checkAppUpdate(it) }
+            }
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun checkAppUpdate(isFirstInit: Boolean) {
+        // PlayStore에서 설치된 경우 설치 경로가 "com.android.vending"으로 됨
+        val isRegisteredPlayStore = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) { // Android 11 기준
+            val info = packageManager.getInstallSourceInfo(packageName)
+            info.installingPackageName == "com.android.vending"
+        } else {
+            packageManager.getInstallerPackageName(packageName) == "com.android.vending"
+        }
+
+        // PlayStore에 등록된 앱 아닌 경우 앱 체크 안 하도록 처리
+        // 로컬 빌드는 앱 등록이 무조건 안 된 것으로 체크하여 addOnFailureListener를 타게 됨
+        if (!isRegisteredPlayStore) {
+            openMain(isFirstInit)
+            return
+        }
+
+        appUpdateManager.appUpdateInfo
+            // PlayStore 통신 성공
+            .addOnSuccessListener { appUpdateInfo ->
+                if ((appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE && appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE))
+                    || appUpdateInfo.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS
+                ) { // 즉시 업데이트 가능한 경우
+                    appUpdateManager.startUpdateFlowForResult(
+                        appUpdateInfo,
+                        this@SplashActivity,
+                        AppUpdateOptions.newBuilder(AppUpdateType.IMMEDIATE).build(),
+                        UPDATE_REQUEST_CODE
+                    )
+                } else {
+                    openMain(isFirstInit)
+                }
+            }
+            // PlayStore 통신 실패 (Ex- PlayStore에 앱 등록이 안 된 경우)
+            .addOnFailureListener {
+                Toast.makeText(this, R.string.app_update_failed, Toast.LENGTH_SHORT).show()
+                openMain(isFirstInit)
+            }
+    }
+
+    @Suppress("DEPRECATION")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == UPDATE_REQUEST_CODE && resultCode != RESULT_OK) {
+            finish() // 업데이트 강제: 취소하거나 실패하면 앱을 종료
+        }
+    }
+
+    /**
+     * 메인으로 이동. 최초 실행이면 메인 안에서 온보딩부터 시작한다.
+     */
+    private fun openMain(isFirstInit: Boolean) {
+        val intent = Intent(applicationContext, MainActivity::class.java)
+        intent.putExtra(MainActivity.EXTRA_FIRST_INIT, isFirstInit)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+        startActivity(intent)
+        finish()
+    }
+}
+
+@Composable
+private fun SplashContent() {
+    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Image(
+                painter = painterResource(R.drawable.ic_app),
+                contentDescription = stringResource(R.string.iv_app),
+                modifier = Modifier.size(160.dp)
+            )
+            Spacer(Modifier.height(24.dp))
+            Text(
+                text = stringResource(R.string.app_name_upper),
+                style = MaterialTheme.typography.headlineLarge,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(Modifier.height(6.dp))
+            Eyebrow(text = stringResource(R.string.splash_title))
         }
     }
 }

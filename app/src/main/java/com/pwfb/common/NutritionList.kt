@@ -1,5 +1,6 @@
 package com.pwfb.common
 
+import com.pwfb.R
 import com.pwfb.domain.entity.NutritionEntity
 
 object NutritionObject {
@@ -12,48 +13,14 @@ object NutritionObject {
     const val CREATINE = "creatine"
     const val DIETARY_FIBER = "dietaryFiber"
 
-    var nutritionEntityLists = listOf(
-        NutritionEntity(
-            CARBOHYDRATE,
-            "권장 탄수화물 섭취량(g)",
-            ""
-        ),
-        NutritionEntity(
-            PROTEIN,
-            "권장 단백질 섭취량(g)",
-            ""
-        ),
-        NutritionEntity(
-            FAT,
-            "권장 지방 섭취량(g)",
-            ""
-        ),
-        NutritionEntity(
-            WATER,
-            "권장 수분 섭취량(ml)",
-            ""
-        ),
-        NutritionEntity(
-            SODIUM,
-            "권장 나트륨 섭취량(mg)",
-            ""
-        ),
-        NutritionEntity(
-            POTASSIUM,
-            "권장 칼륨 섭취량(mg)",
-            ""
-        ),
-        NutritionEntity(
-            CREATINE,
-            "권장 크레아틴 섭취량(g)",
-            ""
-        ),
-        NutritionEntity(
-            DIETARY_FIBER,
-            "권장 식이섬유 섭취량(g)",
-            ""
-        )
+    val nutritionEntityLists = listOf(
+        NutritionEntity(CARBOHYDRATE, R.string.nutrition_explain_carbohydrate),
+        NutritionEntity(PROTEIN, R.string.nutrition_explain_protein),
+        NutritionEntity(FAT, R.string.nutrition_explain_fat),
+        NutritionEntity(WATER, R.string.nutrition_explain_water),
+        NutritionEntity(SODIUM, R.string.nutrition_explain_sodium),
+        NutritionEntity(POTASSIUM, R.string.nutrition_explain_potassium),
+        NutritionEntity(CREATINE, R.string.nutrition_explain_creatine),
+        NutritionEntity(DIETARY_FIBER, R.string.nutrition_explain_dietary_fiber)
     )
 }
-
-

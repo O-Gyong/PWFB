@@ -1,164 +1,35 @@
 package com.pwfb.domain.usecase
 
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.emptyPreferences
-import com.pwfb.common.DataStoreResult
-import com.pwfb.common.DataStoreResult.RESULT_SUCCESS
-import com.pwfb.common.DataStoreResult.SET_WEIGHT
-import com.pwfb.data.PrefRepositoryImpl
+import com.pwfb.domain.entity.PrefKey
 import com.pwfb.domain.entity.PwfbResultEntity
 import com.pwfb.domain.repository.PrefRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.map
-import java.io.IOException
 import javax.inject.Inject
 
 class PrefUseCase @Inject constructor(
     private val repository: PrefRepository
 ) {
+    /**
+     * 설정 값 관찰
+     * 저장된 값이 바뀔 때마다 새 값을 방출하고, 저장된 값이 없으면 [PrefKey.default]를 방출한다.
+     */
+    fun observe(key: PrefKey): Flow<String> = repository.observe(key)
 
     /**
-     * 이름 설정
+     * 설정 값 저장
+     * 성공하면 [PwfbResultEntity.Success], 저장 중 예외가 발생하면 [PwfbResultEntity.Failure]를 반환한다.
      */
-    suspend fun setName(name: String): PwfbResultEntity {
-        return repository.setName(name)
-    }
-
-    suspend fun getName(): Flow<String> {
-        return repository.getName()
-    }
+    suspend fun set(key: PrefKey, value: String): PwfbResultEntity = repository.set(key, value)
 
     /**
-     * 최초 진입 여부 설정
+     * 최초 진입 여부 관찰
+     * 저장된 값이 없으면 앱 최초 진입(true)으로 판단한다.
      */
-    suspend fun setFistInit(): PwfbResultEntity {
-        return repository.setFistInit()
-    }
-
-    suspend fun getFirstInit(): Flow<Boolean> {
-        return repository.getFirstInit()
-    }
+    fun observeFirstInit(): Flow<Boolean> = repository.observeFirstInit()
 
     /**
-     * 몸무게 설정
+     * 최초 진입 완료 처리
+     * 이후 [observeFirstInit]이 false를 방출한다.
      */
-    suspend fun setWeight(weight: String): PwfbResultEntity {
-        return repository.setWeight(weight)
-    }
-
-    suspend fun getWeight(): Flow<String> {
-        return repository.getWeight()
-    }
-
-    /**
-     * D-Day 설정
-     */
-    suspend fun setDDay(dDay: String): PwfbResultEntity {
-        return repository.setDDay(dDay)
-    }
-
-    suspend fun getDDay(): Flow<String> {
-        return repository.getDDay()
-    }
-
-    /**
-     * 운동 계획 설정
-     */
-    suspend fun setTrainingProgram(trainingProgram: String): PwfbResultEntity {
-        return repository.setTrainingProgram(trainingProgram)
-    }
-
-    suspend fun getTrainingProgram(): Flow<String> {
-        return repository.getTrainingProgram()
-    }
-
-    /**
-     * 탄수화물 설정
-     */
-    suspend fun setCarbohydrate(carbohydrate: String): PwfbResultEntity {
-        return repository.setCarbohydrate(carbohydrate)
-    }
-
-    suspend fun getCarbohydrate(): Flow<String> {
-        return repository.getCarbohydrate()
-    }
-
-    /**
-     * 단백질 설정
-     */
-    suspend fun setProtein(protein: String): PwfbResultEntity {
-        return repository.setProtein(protein)
-    }
-
-    suspend fun getProtein(): Flow<String> {
-        return repository.getProtein()
-    }
-
-    /**
-     * 지방 설정
-     */
-    suspend fun setFat(fat: String): PwfbResultEntity {
-        return repository.setFat(fat)
-    }
-
-    suspend fun getFat(): Flow<String> {
-        return repository.getFat()
-    }
-
-    /**
-     * 수분 설정
-     */
-    suspend fun setWater(water: String): PwfbResultEntity {
-        return repository.setWater(water)
-    }
-
-    suspend fun getWater(): Flow<String> {
-        return repository.getWater()
-    }
-
-    /**
-     * 나트륨 설정
-     */
-    suspend fun setSodium(sodium: String): PwfbResultEntity {
-        return repository.setSodium(sodium)
-    }
-
-    suspend fun getSodium(): Flow<String> {
-        return repository.getSodium()
-    }
-
-    /**
-     * 칼륨 설정
-     */
-    suspend fun setPotassium(potassium: String): PwfbResultEntity {
-        return repository.setPotassium(potassium)
-    }
-
-    suspend fun getPotassium(): Flow<String> {
-        return repository.getPotassium()
-    }
-
-    /**
-     * 크레아틴 설정
-     */
-    suspend fun setCreatine(creatine: String): PwfbResultEntity {
-        return repository.setCreatine(creatine)
-    }
-
-    suspend fun getCreatine(): Flow<String> {
-        return repository.getCreatine()
-    }
-
-    /**
-     * 식이 섬유
-     */
-    suspend fun setDietaryFiber(dietaryFiber: String): PwfbResultEntity {
-        return repository.setDietaryFiber(dietaryFiber)
-    }
-
-    suspend fun getDietaryFiber(): Flow<String> {
-        return repository.getDietaryFiber()
-    }
-
+    suspend fun setFirstInit(): PwfbResultEntity = repository.setFirstInit()
 }

@@ -1,32 +1,81 @@
-import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
+import java.io.FileInputStream
 
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("dagger.hilt.android.plugin")
-    id("kotlin-kapt")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics)
+}
+
+val localPropertiesFile = rootProject.file("local.properties")
+val localProperties = Properties()
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
+}
+
+// 릴리즈 서명 정보가 모두 있을 때만 release 서명을 설정 (없으면 debug 빌드/테스트는 그대로 가능)
+val hasReleaseSigning = listOf("storeFile", "keyAlias", "keyPassword", "storePassword")
+    .all { !localProperties.getProperty(it).isNullOrBlank() }
+
+val adMobApiKey: String? = localProperties.getProperty("AdMobAPI_KEY")?.takeIf { it.isNotBlank() }
+
+// Google 공식 테스트 앱 ID (크래시 방지)
+val adMobTestAppId = "ca-app-pub-3940256099942544~3347511713"
+
+// 릴리즈 빌드는 서명 정보와 AdMob 키가 없으면 빌드를 막음 (서명 안 된 APK, 광고 ID 없는 앱 배포 방지)
+gradle.taskGraph.whenReady {
+    val isReleaseBuild = allTasks.any {
+        it.project == project && (it.name.startsWith("assembleRelease") || it.name.startsWith("bundleRelease"))
+    }
+    if (isReleaseBuild) {
+        if (!hasReleaseSigning) {
+            throw GradleException("릴리즈 빌드에는 local.properties의 storeFile, keyAlias, keyPassword, storePassword가 필요합니다.")
+        }
+        if (adMobApiKey == null) {
+            throw GradleException("릴리즈 빌드에는 local.properties의 AdMobAPI_KEY가 필요합니다.")
+        }
+    }
 }
 
 android {
+    if (hasReleaseSigning) {
+        signingConfigs {
+            create("release") {
+                keyAlias = localProperties.getProperty("keyAlias")
+                keyPassword = localProperties.getProperty("keyPassword")
+                storePassword = localProperties.getProperty("storePassword")
+                storeFile = file(localProperties.getProperty("storeFile"))
+            }
+        }
+    }
     namespace = "com.pwfb"
-    compileSdk = 34
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.pwfb"
         minSdk = 29
-        targetSdk = 34
-        versionCode = 3
-        versionName = "1.2"
+        targetSdk = 36
+        versionCode = 16
+        versionName = "1.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        fun key(pKey:String): String = gradleLocalProperties(rootDir).getProperty(pKey) ?: ""
-        manifestPlaceholders["AdMobAPI_KEY"] = key("AdMobAPI_KEY")
     }
 
     buildTypes {
+        debug {
+            manifestPlaceholders["AdMobAPI_KEY"] = adMobApiKey ?: adMobTestAppId
+        }
         release {
+            manifestPlaceholders["AdMobAPI_KEY"] = adMobApiKey ?: ""
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -34,71 +83,70 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.2"
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures {
+        // UI는 전부 Jetpack Compose (XML 레이아웃 없음)
         compose = true
-        dataBinding = true
+    }
+
+    lint {
+        // baseline 없이 운영한다. 경고는 CI 로그로 확인하고, 오류만 빌드를 막는다.
+        abortOnError = true
+        checkReleaseBuilds = false
     }
 }
 
-val hiltVersion = 2.46
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
+    }
+}
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.10.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-
-    // Compose
-    implementation(platform("androidx.compose:compose-bom:2023.03.00"))
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-graphics")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material:material")
-    implementation("androidx.compose.material3:material3:1.2.1")
-    implementation("androidx.navigation:navigation-compose:2.7.7")
-    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
-
-    implementation ("com.github.commandiron:WheelPickerCompose:1.1.11")
+    implementation(libs.androidx.core.ktx)
 
     // Splash Screen
-    implementation ("androidx.core:core-splashscreen:1.0.1")
+    implementation(libs.androidx.splashscreen)
 
     // ViewModel
-    implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
-    implementation ("androidx.activity:activity-ktx:1.8.1")
-    implementation ("androidx.fragment:fragment-ktx:1.6.2")
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.activity.ktx)
 
-    // Navigation
-    implementation("androidx.navigation:navigation-fragment-ktx:2.7.5")
-    implementation("androidx.navigation:navigation-ui-ktx:2.7.5")
+    // Compose
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.hilt.navigation.compose)
+    debugImplementation(libs.androidx.compose.ui.tooling)
 
     // Preferences DataStore
-    implementation("androidx.datastore:datastore-preferences:1.0.0")
-    implementation("androidx.datastore:datastore-preferences-core:1.0.0")
+    implementation(libs.androidx.datastore.preferences)
 
     // Hilt
-    implementation ("com.google.dagger:hilt-android:$hiltVersion")
-    kapt ("com.google.dagger:hilt-android-compiler:$hiltVersion")
-
-    // CalendarView
-    implementation ("com.github.prolificinteractive:material-calendarview:2.0.1")
-
-    // CalendarView 년 월 표시
-    implementation ("com.jakewharton.threetenabp:threetenabp:1.2.0")
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
 
     // 애드몹
-    implementation ("com.google.android.gms:play-services-ads:22.6.0")
+    implementation(libs.play.services.ads)
 
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.storage)
+
+    implementation(libs.app.update.ktx)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
 }
