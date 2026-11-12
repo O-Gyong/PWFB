@@ -1,53 +1,43 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
-    id("com.android.library")
-    id("org.jetbrains.kotlin.android")
-    id("kotlin-kapt")
-    id("dagger.hilt.android.plugin")
+    alias(libs.plugins.android.library)
 }
 
 android {
     namespace = "com.pwfb.domain"
-    compileSdk = AppConfig.COMPILE_SDK
+    compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
-        minSdk = AppConfig.MIN_SDK
+        minSdk = libs.versions.minSdk.get().toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
 
     buildTypes {
         release {
+            // 난독화는 app 모듈에서 전체 APK 기준으로 한 번만 수행한다
             isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
         }
     }
     compileOptions {
-        sourceCompatibility = CompileOption.JAVA_VERSION
-        targetCompatibility = CompileOption.JAVA_VERSION
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = CompileOption.JVM_TARGET
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
     }
 }
 
 dependencies {
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.kotlinx.coroutines.core)
 
-    // KTX
-    implementation(Libraries.KTX.CORE)
+    // @Inject 어노테이션용 (컴파일러는 불필요)
+    implementation(libs.hilt.android)
 
-    // AndroidX ETC
-    implementation(Libraries.AndroidX.APP_COMPAT)
-    implementation(Libraries.AndroidX.MATERIAL)
-
-    // Hilt
-    implementation(Libraries.Hilt.HILT_ANDROID)
-    kapt(Libraries.Hilt.HILT_ANDROID_COMPILER)
-
-    // Test
-    testImplementation(Libraries.Test.JUNIT)
-    androidTestImplementation(Libraries.Test.TEST_EXT_JUNIT)
-    androidTestImplementation(Libraries.Test.ESPRESSO_CORE)
+    testImplementation(libs.junit)
 }

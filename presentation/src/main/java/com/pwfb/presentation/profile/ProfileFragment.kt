@@ -1,133 +1,160 @@
 package com.pwfb.presentation.profile
 
 import android.annotation.SuppressLint
-import android.app.TimePickerDialog
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.annotation.StringRes
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.google.android.gms.ads.AdRequest
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.prolificinteractive.materialcalendarview.CalendarDay
-import com.prolificinteractive.materialcalendarview.format.ArrayWeekDayFormatter
-import com.prolificinteractive.materialcalendarview.format.MonthArrayTitleFormatter
+import com.google.firebase.installations.FirebaseInstallations
+import com.google.firebase.storage.StorageReference
 import com.pwfb.presentation.R
-import com.pwfb.presentation.base.BaseFragment
-import com.pwfb.presentation.common.DataStoreResult
+import com.pwfb.presentation.databinding.DialogInfoBinding
 import com.pwfb.presentation.databinding.FragmentProfileBinding
+import com.pwfb.domain.entity.PrefKey
 import com.pwfb.presentation.MainViewModel
-import com.pwfb.presentation.util.ClearDecorator
-import com.pwfb.presentation.util.DayDisableDecorator
-import com.pwfb.presentation.util.SelectDecorator
-import com.pwfb.presentation.util.TodayDecorator
+import com.pwfb.presentation.util.calcDDay
+import com.pwfb.presentation.util.formatDatePref
+import com.pwfb.presentation.util.formatTimeDisplay
+import com.pwfb.presentation.util.formatTimeStore
+import com.pwfb.domain.util.getCurrentToday
+import com.pwfb.presentation.util.parseDatePref
+import com.pwfb.presentation.util.parseTimePref
+import com.pwfb.presentation.util.reattachPwfbPickers
+import com.pwfb.presentation.util.showPwfbDatePicker
+import com.pwfb.presentation.util.showPwfbTimePicker
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import org.threeten.bp.format.DateTimeFormatter
-import java.text.SimpleDateFormat
+import java.io.File
 import java.time.LocalDate
-import java.util.Calendar
+import java.time.LocalTime
+import javax.inject.Inject
 
 
 @AndroidEntryPoint
-@SuppressLint("SimpleDateFormat", "SetTextI18n", "InflateParams")
-class ProfileFragment : BaseFragment() {
+@SuppressLint("SetTextI18n")
+class ProfileFragment : Fragment() {
 
-    private lateinit var binding: FragmentProfileBinding
+    private var _binding: FragmentProfileBinding? = null
+    private val binding get() = _binding!!
     private val viewModel: MainViewModel by viewModels()
 
-    private var dDayPref = ""
-    private var datePref = ""
-    private var timePref = ""
+    @Inject
+    lateinit var logStorageReference: StorageReference
+
+    // 화면에서 고른(아직 저장 전일 수 있는) 대회 날짜·시간·체중
+    private var dDayDate: LocalDate? = null
+    private var timeHour = 0
+    private var timeMinute = 0
     private var weightPref = 0.0
     private var weight = 0.0
 
-    private var infoDialogView: View? = null
-    private lateinit var infoDialog: BottomSheetDialog
-    private val strategyDialog = StrategyDialogFragment()
+    private var infoDialog: BottomSheetDialog? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentProfileBinding.inflate(layoutInflater)
-        binding.adView.loadAd(AdRequest.Builder().build())
+        _binding = FragmentProfileBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         setOnClickListener()
-        setCalendarView()
         viewModelObserve()
-        viewModel.getName()
-        viewModel.getWeight()
-        viewModel.getDDay()
+        childFragmentManager.reattachPwfbPickers(::onDatePicked, ::onTimePicked)
 
-        infoDialogView = layoutInflater.inflate(R.layout.dialog_info, null)
-        infoDialog = BottomSheetDialog(requireContext())
-        infoDialog.setContentView(infoDialogView!!)
+        init()
+    }
 
-        return binding.root
+    override fun onDestroyView() {
+        infoDialog?.dismiss()
+        infoDialog = null
+        _binding = null
+        super.onDestroyView()
+    }
+
+    private fun init() {
+        val info = DialogInfoBinding.inflate(layoutInflater)
+        val versionName = runCatching {
+            requireContext().packageManager.getPackageInfo(requireContext().packageName, 0).versionName
+        }.getOrNull() ?: "-"
+        info.tvVersion.text = getString(R.string.app_version_format, versionName)
+
+        infoDialog = BottomSheetDialog(requireContext()).apply {
+            setContentView(info.root)
+        }
     }
 
     private fun setOnClickListener() {
         binding.btModify.setOnClickListener {
-            viewModel.setDDay("$dDayPref $timePref")
-            viewModel.setWeight(weight.toString())
+            dDayDate?.let { date ->
+                viewModel.save(PrefKey.D_DAY, "${formatDatePref(date)} ${formatTimeStore(timeHour, timeMinute)}")
+            }
+            viewModel.save(PrefKey.WEIGHT, weight.toString())
+        }
+
+        binding.btDate.setOnClickListener {
+            childFragmentManager.showPwfbDatePicker(dDayDate, ::onDatePicked)
         }
 
         binding.btTime.setOnClickListener {
-            setTimeSpinner()
+            childFragmentManager.showPwfbTimePicker(timeHour, timeMinute, ::onTimePicked)
         }
 
-        binding.ivMinus.setOnClickListener {
+        binding.btMinus.setOnClickListener {
             weight = (weight*10 - 1).toInt() / 10.0
             binding.tvWeight.text = weight.toString()+"Kg"
             setWeightBtn()
         }
 
-        binding.ivPlus.setOnClickListener {
+        binding.btPlus.setOnClickListener {
             weight = (weight*10 + 1).toInt() / 10.0
             binding.tvWeight.text = weight.toString()+"Kg"
             setWeightBtn()
         }
 
         binding.clPwfbInformation.setOnClickListener {
-            infoDialog.show()
+            infoDialog?.show()
         }
 
         binding.clTheDayStrategy.setOnClickListener {
-            strategyDialog.show(activity?.supportFragmentManager!!, strategyDialog.tag)
+            StrategyDialogFragment().show(childFragmentManager, "strategy")
+        }
+
+        binding.clLogSend.setOnClickListener {
+            viewModel.requestLogUpload()
         }
     }
 
     private fun viewModelObserve() {
-
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    viewModel.nameObserve.collectLatest {
-                        if(it == DataStoreResult.SET_NAME) {
-                            // todo
-                            return@collectLatest
-                        }
+                    viewModel.state(PrefKey.NAME).collectLatest {
                         binding.tvName.text = it
+                        binding.tvAvatar.text = it.trim().firstOrNull()?.toString() ?: "?"
                     }
                 }
 
                 launch {
-                    viewModel.weightObserve.collectLatest {
-                        if(it == DataStoreResult.SET_WEIGHT) {
-                            binding.btModify.isEnabled = false
-                            binding.btModify.setTextColor(requireContext().getColor(R.color.c_949292))
-                            viewModel.getWeight()
-                            return@collectLatest
-                        }
-
-                        weightPref = it.toDouble()
-                        weight = it.toDouble()
+                    viewModel.state(PrefKey.WEIGHT).collectLatest {
+                        // 아직 읽기 전(빈 문자열)이면 무시
+                        val savedWeight = it.toDoubleOrNull() ?: return@collectLatest
+                        weightPref = savedWeight
+                        weight = savedWeight
 
                         binding.tvIdealWeight.text = getString(
                             R.string.profile_weight,
@@ -140,160 +167,91 @@ class ProfileFragment : BaseFragment() {
                 }
 
                 launch {
-                    viewModel.dDayObserve.collectLatest {
-                        if(it == DataStoreResult.SET_D_DAY) {
+                    viewModel.state(PrefKey.D_DAY).collectLatest {
+                        val savedDate = parseDatePref(it) ?: return@collectLatest
+                        dDayDate = savedDate
+                        binding.btDate.text = formatDatePref(savedDate)
+                        setDDay()
+
+                        val (hour, minute) = parseTimePref(it) ?: LocalTime.now().let { now -> now.hour to now.minute }
+                        timeHour = hour
+                        timeMinute = minute
+                        binding.btTime.text = formatTimeDisplay(hour, minute)
+                    }
+                }
+
+                // 체중/D-Day 저장에 성공하면 변경 버튼 비활성화, 실패하면 사용자에게 알림
+                launch {
+                    viewModel.saveResult.collect {
+                        if(!it.success) {
+                            showToast(R.string.save_failed)
+                        } else if(it.key == PrefKey.WEIGHT || it.key == PrefKey.D_DAY) {
                             binding.btModify.isEnabled = false
-                            binding.btModify.setTextColor(requireContext().getColor(R.color.c_949292))
-                            return@collectLatest
-                        } else {
-                            dDayPref = it
-                            datePref = it.substring(0..9)
-                            setDDay()
-
-                            setTime(it.substring(14..18))
-
-                            val targetCalendarDay = CalendarDay.from(org.threeten.bp.LocalDate.parse(
-                                datePref,
-                                DateTimeFormatter.ofPattern("yyyy.MM.dd"))
-                            )
-                            val targetDecorator = SelectDecorator(
-                                requireContext().getColor(R.color.c_caab3f),
-                                targetCalendarDay
-                            )
-                            binding.cvCalendar.selectedDate = targetCalendarDay
-                            binding.cvCalendar.addDecorator(targetDecorator)
                         }
                     }
                 }
+
+                launch {
+                    viewModel.logUpload.collect { uploadLog(it) }
+                }
             }
-
         }
     }
 
-    private fun setCalendarView() {
-        // 연, 월 헤더 스타일
-        binding.cvCalendar.setHeaderTextAppearance(R.style.CalendarWidgetHeader)
+    private fun onDatePicked(date: LocalDate) {
+        dDayDate = date
+        binding.btDate.text = formatDatePref(date)
+        setDDay()
+        binding.btModify.isEnabled = true
+    }
 
-        // 1~12월, 월간 표시
-        binding.cvCalendar.setTitleFormatter(MonthArrayTitleFormatter(resources.getTextArray(R.array.calendar_month)))
+    private fun onTimePicked(hour: Int, minute: Int) {
+        timeHour = hour
+        timeMinute = minute
+        binding.btTime.text = formatTimeDisplay(hour, minute)
+        binding.btModify.isEnabled = true
+    }
 
-        // 일~토, 주간 표시
-        binding.cvCalendar.setWeekDayFormatter(ArrayWeekDayFormatter(resources.getTextArray(R.array.calendar_week)))
-
-        // 헤더 년 월로 표시
-        binding.cvCalendar.setTitleFormatter { day ->
-            val inputText = day.date
-            val calendarHeaderElements = inputText.toString().split("-")
-            val calendarHeaderBuilder = StringBuilder()
-
-            calendarHeaderBuilder
-                .append(calendarHeaderElements[0]).append("년 ")
-                .append(calendarHeaderElements[1]).append("월")
-
-            calendarHeaderBuilder.toString()
+    /**
+     * 오늘 로그 파일을 Firebase Storage로 전송한다. file이 null이면 전송할 로그가 없는 것.
+     * 같은 날 여러 사용자가 올려도 덮어쓰지 않도록 앱 설치 ID로 파일명을 구분한다.
+     */
+    private fun uploadLog(file: File?) {
+        if(file == null) {
+            showToast(R.string.log_empty)
+            return
         }
 
-        val today = CalendarDay.today()
-        val disabledDates = hashSetOf<CalendarDay>()
-
-        val dayDisableDecorator = DayDisableDecorator(disabledDates, today, requireContext().getColor(R.color.c_949292))
-        val todayDecorator = TodayDecorator(requireContext().getColor(R.color.c_caab3f))
-
-        binding.cvCalendar.addDecorators(dayDisableDecorator, todayDecorator)
-
-        // 날짜 선택 시 처리
-        binding.cvCalendar.setOnDateChangedListener { _, date, _ ->
-            binding.cvCalendar.addDecorators(
-                ClearDecorator(requireContext().getColor(R.color.white), date),
-                dayDisableDecorator, todayDecorator,
-                SelectDecorator(requireContext().getColor(R.color.c_caab3f), date)
-            )
-
-            binding.btModify.isEnabled = true
-            binding.btModify.setTextColor(requireContext().getColor(R.color.white))
-
-            val month = if(date.month<10) "0${date.month}" else "${date.month}"
-            val day = if(date.day<10) "0${date.day}" else "${date.day}"
-
-            dDayPref = "${date.year}.$month.$day${getWeek(date)}"
-
-            setDDay()
+        showToast(R.string.log_sending)
+        FirebaseInstallations.getInstance().id.addOnCompleteListener { task ->
+            val name = if(task.isSuccessful) task.result else "unknown_${System.currentTimeMillis()}"
+            try {
+                logStorageReference
+                    .child("${getCurrentToday()}/$name.txt")
+                    .putFile(Uri.fromFile(file))
+                    .addOnSuccessListener { showToast(R.string.log_send_success) }
+                    .addOnFailureListener { showToast(R.string.log_send_fail) }
+            } catch (e: Exception) {
+                showToast(R.string.log_send_fail)
+            }
         }
     }
 
-    private fun getWeek(date: CalendarDay):String {
-        return when(LocalDate.of(date.year, date.month, date.day).dayOfWeek.value) {
-            1 -> "(월)"
-            2 -> "(화)"
-            3 -> "(수)"
-            4 -> "(목)"
-            5 -> "(금)"
-            6 -> "(토)"
-            7 -> "(일)"
-            else -> ""
-        }
-    }
-
-    private fun setTime(time: String) {
-        val hourPref = time.substring(0..1)
-        val minutePref = time.substring(3..4)
-
-        val amPm = if(hourPref[0]=='1' && hourPref[1].code>2) "오후" else "오전"
-        val hour = if(amPm == "오후") (hourPref.toInt()-12).toString() else hourPref
-
-        binding.btTime.text = "$amPm $hour:$minutePref"
-        timePref = "$hourPref:$minutePref⏳"
+    /**
+     * 전송 결과처럼 화면이 사라진 뒤에 호출될 수 있는 콜백에서도 안전하게 토스트를 띄운다.
+     */
+    private fun showToast(@StringRes messageRes: Int) {
+        val context = context ?: return
+        Toast.makeText(context.applicationContext, messageRes, Toast.LENGTH_SHORT).show()
     }
 
     private fun setDDay() {
-        val targetDate = SimpleDateFormat("yyyy.MM.dd").parse(dDayPref)!!.time
-        val today = Calendar.getInstance().time.time
-
-        val dDay = (today - targetDate) / (60*60*24*1000)
+        val date = dDayDate ?: return
+        val dDay = calcDDay(formatDatePref(date)) ?: return
         binding.tvDDay.text = "D$dDay"
     }
 
-    private fun setTimeSpinner() {
-        val cal = Calendar.getInstance()
-
-        val timeSetListener = TimePickerDialog.OnTimeSetListener { _, pHour, pMinute ->
-            cal.set(Calendar.HOUR_OF_DAY, pHour)
-            cal.set(Calendar.MINUTE, pMinute)
-
-            val amPm = if(pHour < 12) "오전" else "오후"
-
-            val hour = if(amPm == "오후") {
-                if((pHour-12)<10) "0${(pHour-12)}" else "${(pHour-12)}"
-            } else {
-                if(pHour<10) "0$pHour" else "$pHour"
-            }
-
-            val minute = if(pMinute<10) "0$pMinute" else "$pMinute"
-
-            binding.btTime.text = "$amPm $hour:$minute"
-            timePref = if(amPm == "오후") "$pHour:$minute⏳" else "$hour:$minute⏳"
-        }
-
-        val timePickerDialog = TimePickerDialog(
-            requireContext(),
-            R.style.TimePickerTheme,
-            timeSetListener,
-            cal.get(Calendar.HOUR_OF_DAY),
-            cal.get(Calendar.MINUTE),
-            false
-        )
-        timePickerDialog.setButton(TimePickerDialog.BUTTON_POSITIVE, getString(R.string.confirm), timePickerDialog)
-        timePickerDialog.setButton(TimePickerDialog.BUTTON_NEGATIVE, getString(R.string.cancel), timePickerDialog)
-        timePickerDialog.show()
-    }
-
     private fun setWeightBtn() {
-        if(weightPref != weight) {
-            binding.btModify.isEnabled = true
-            binding.btModify.setTextColor(requireContext().getColor(R.color.white))
-        } else {
-            binding.btModify.isEnabled = false
-            binding.btModify.setTextColor(requireContext().getColor(R.color.c_949292))
-        }
+        binding.btModify.isEnabled = weightPref != weight
     }
 }

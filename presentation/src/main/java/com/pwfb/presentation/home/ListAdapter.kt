@@ -1,180 +1,44 @@
 package com.pwfb.presentation.home
 
-import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.pwfb.presentation.R
 import com.pwfb.presentation.common.NutritionObject
+import com.pwfb.presentation.databinding.ItemNutritionBinding
 import com.pwfb.domain.entity.NutritionEntity
-import com.pwfb.presentation.databinding.ListNutritionBinding
-import javax.inject.Inject
+import com.pwfb.presentation.NutrientUi
+import com.pwfb.presentation.showNutrientAvatar
 
-class ListAdapter @Inject constructor(
-    private val context: Context,
+class ListAdapter(
     private val nutritionEntityList: List<NutritionEntity>,
     private val kg: Double,
     private val dDay: Int
 ): RecyclerView.Adapter<ListAdapter.ViewHolder>() {
     inner class ViewHolder(
-        private val binding: ListNutritionBinding
+        private val binding: ItemNutritionBinding
     ): RecyclerView.ViewHolder(binding.root) {
         fun bind(nutritionEntity: NutritionEntity) {
-            binding.tvExplain.text = nutritionEntity.explain
-            binding.tvIntake.text = nutritionEntity.intake
+            val context = binding.root.context
+            binding.tvEmoji.showNutrientAvatar(NutrientUi.of(nutritionEntity.type))
+            binding.tvExplain.setText(nutritionEntity.explainRes)
 
-            if(nutritionEntity.type == NutritionObject.DIETARY_FIBER) {
-                binding.vDivider.visibility = View.GONE
-            }
+            val intake = NutritionIntake.of(nutritionEntity.type, dDay, kg)
+            binding.tvIntake.text = context.getString(intake.resId, *intake.args.toTypedArray())
 
-            setDDayIntake(binding, nutritionEntity)
-
-        }
-    }
-
-    fun setDDayIntake(
-        binding: ListNutritionBinding,
-        nutritionEntity: NutritionEntity
-    ) {
-        binding.tvIntake.text = when(nutritionEntity.type) {
-            NutritionObject.CARBOHYDRATE -> {
-                when(dDay) {
-                    -6, -5, -4 -> {
-                        context.getString(R.string.home_carbohydrate_day_654)
-                    }
-                    -3 -> {
-                        context.getString(R.string.home_carbohydrate_day_32, (kg*10).toInt())
-                    }
-                    -2 -> {
-                        context.getString(R.string.home_carbohydrate_day_32, (kg*2*10/3).toInt())
-                    }
-                    -1 -> {
-                        context.getString(R.string.home_carbohydrate_day_1, kg.toInt(), (kg*3).toInt())
-                    }
-                    else -> {
-                        context.getString(R.string.home_carbohydrate_day_7)
-                    }
-                }
-            }
-
-            NutritionObject.PROTEIN -> {
-                when(dDay) {
-                    -6, -5, -4 -> {
-                        context.getString(R.string.home_protein_day_654, (kg*2.4).toInt(), (kg*3).toInt())
-                    }
-                    -3, -2 -> {
-                        context.getString(R.string.home_protein_day_32, (kg*1.6).toInt())
-                    }
-                    -1 -> {
-                        context.getString(R.string.home_protein_day_1, (kg*3).toInt())
-                    }
-                    else -> {
-                      context.getString(R.string.nutrition_usually_intake, "🥩")
-                    }
-                }
-            }
-
-            NutritionObject.FAT -> {
-                when(dDay) {
-                    -7, -6, -5, -4 -> {
-                        context.getString(R.string.home_fat_day_7654, (kg*0.7).toInt(), (kg*1.2).toInt())
-                    }
-                    -3, -2 -> {
-                        context.getString(R.string.home_fat_day_32, (kg*0.5).toInt())
-                    }
-                    -1 -> {
-                        context.getString(R.string.home_fat_day_1, (kg*0.7).toInt(), (kg*1.0).toInt())
-                    }
-                    else -> {
-                        context.getString(R.string.nutrition_usually_intake, "🥜")
-                    }
-                }
-            }
-
-            NutritionObject.WATER -> {
-                when(dDay) {
-                    -3, -2 -> {
-                        context.getString(R.string.home_water_day_3)
-                    }
-                    -1 -> {
-                        context.getString(R.string.home_water_day_1)
-                    }
-                    else -> {
-                        context.getString(R.string.nutrition_usually_intake, "💧")
-                    }
-                }
-            }
-
-            NutritionObject.SODIUM -> {
-                when(dDay) {
-                    -3 -> {
-                        context.getString(R.string.home_sodium_day_3)
-                    }
-                    -2 -> {
-                        context.getString(R.string.home_sodium_day_2)
-                    }
-                    -1 -> {
-                        context.getString(R.string.home_sodium_day_1)
-                    }
-                    else -> {
-                        context.getString(R.string.nutrition_usually_intake, "🧂")
-                    }
-                }
-            }
-
-            NutritionObject.POTASSIUM -> {
-                when(dDay) {
-                    -3 -> {
-                        context.getString(R.string.home_potassium_day_3)
-                    }
-                    else -> {
-                        context.getString(R.string.nutrition_usually_intake, "🍌")
-                    }
-                }
-            }
-
-            NutritionObject.CREATINE -> {
-                when(dDay) {
-                    -7, -6, -5, -4 -> {
-                        context.getString(R.string.home_creatine_day_7654)
-                    }
-                    -3, -2, -1 -> {
-                        context.getString(R.string.home_creatine_day_321)
-                    }
-                    else -> {
-                        context.getString(R.string.nutrition_usually_intake, "🔥")
-                    }
-                }
-            }
-
-            NutritionObject.DIETARY_FIBER -> {
-                when(dDay) {
-                    -6, -5, -4 -> {
-                        context.getString(R.string.home_dietary_fiber_day_654)
-                    }
-                    -3, -2, -1 -> {
-                        context.getString(R.string.home_dietary_fiber_day_321)
-                    }
-                    else -> {
-                        context.getString(R.string.nutrition_usually_intake, "🥦")
-                    }
-                }
-            }
-
-            else -> { context.getString(R.string.nutrition_usually_intake) }
+            // 마지막 항목은 구분선을 숨긴다
+            binding.vDivider.visibility =
+                if (nutritionEntity.type == NutritionObject.DIETARY_FIBER) View.GONE else View.VISIBLE
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding =
-            ListNutritionBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            ItemNutritionBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ViewHolder(binding)
     }
 
-    override fun getItemCount(): Int {
-        return nutritionEntityList.count()
-    }
+    override fun getItemCount(): Int = nutritionEntityList.size
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.bind(nutritionEntityList[position])

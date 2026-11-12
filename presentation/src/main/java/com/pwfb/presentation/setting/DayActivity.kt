@@ -1,65 +1,68 @@
 package com.pwfb.presentation.setting
 
-import android.annotation.SuppressLint
-import android.app.TimePickerDialog
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.viewModels
-import com.prolificinteractive.materialcalendarview.CalendarDay
-import com.prolificinteractive.materialcalendarview.format.ArrayWeekDayFormatter
-import com.prolificinteractive.materialcalendarview.format.MonthArrayTitleFormatter
-import com.pwfb.presentation.R
-import com.pwfb.presentation.base.BaseActivity
+import androidx.appcompat.app.AppCompatActivity
 import com.pwfb.presentation.databinding.ActivityDayBinding
 import com.pwfb.domain.entity.PwfbResultEntity
 import com.pwfb.presentation.MainActivity
-import com.pwfb.presentation.common.DataStoreResult
-import com.pwfb.presentation.util.ClearDecorator
-import com.pwfb.presentation.util.DayDisableDecorator
-import com.pwfb.presentation.util.SelectDecorator
-import com.pwfb.presentation.util.TodayDecorator
+import com.pwfb.presentation.util.applySystemBarInsetsAsPadding
+import com.pwfb.presentation.util.enablePwfbEdgeToEdge
+import com.pwfb.presentation.util.formatDatePref
+import com.pwfb.presentation.util.formatTimeDisplay
+import com.pwfb.presentation.util.formatTimeStore
+import com.pwfb.presentation.util.reattachPwfbPickers
+import com.pwfb.presentation.util.showPwfbDatePicker
+import com.pwfb.presentation.util.showPwfbTimePicker
 import dagger.hilt.android.AndroidEntryPoint
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.util.Calendar
+import java.time.LocalTime
 
 
 @AndroidEntryPoint
-class DayActivity : BaseActivity() {
+class DayActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDayBinding
     private val viewModel: DayViewModel by viewModels()
 
-    private var datePref = ""
-    private var timePref = ""
+    private var date: LocalDate? = null
+    private var timeHour = 0
+    private var timeMinute = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.d(PWFB, "WeightActivity onCreate")
-
+        enablePwfbEdgeToEdge()
         super.onCreate(savedInstanceState)
         binding = ActivityDayBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.clName.applySystemBarInsetsAsPadding()
 
-        setCalendarView()
-        getLocalTime()
+        // 시간은 현재 시각을 기본값으로
+        val now = LocalTime.now()
+        onTimePicked(now.hour, now.minute)
+        supportFragmentManager.reattachPwfbPickers(::onDatePicked, ::onTimePicked)
+
+        binding.btDate.setOnClickListener {
+            supportFragmentManager.showPwfbDatePicker(date, ::onDatePicked)
+        }
 
         binding.btTime.setOnClickListener {
-            setTimeSpinner()
+            supportFragmentManager.showPwfbTimePicker(timeHour, timeMinute, ::onTimePicked)
         }
 
         binding.btGo.setOnClickListener {
-            viewModel.setDDay("$datePref $timePref")
+            val picked = date ?: return@setOnClickListener
+            viewModel.setDDay("${formatDatePref(picked)} ${formatTimeStore(timeHour, timeMinute)}")
         }
 
         viewModel.dDayObserve.observe(this) {
-            if(it == PwfbResultEntity.Success(DataStoreResult.RESULT_SUCCESS)) {
+            if(it is PwfbResultEntity.Success) {
                 viewModel.setFirstInit()
             }
         }
 
         viewModel.firstInitObserve.observe(this) {
-            if(it == PwfbResultEntity.Success(DataStoreResult.RESULT_SUCCESS)) {
+            if(it is PwfbResultEntity.Success) {
                 val intent = Intent(applicationContext, MainActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
                 startActivity(intent)
@@ -68,118 +71,15 @@ class DayActivity : BaseActivity() {
         }
     }
 
-    private fun setCalendarView() {
-        // 연, 월 헤더 스타일
-        binding.cvCalendar.setHeaderTextAppearance(R.style.CalendarWidgetHeader)
-
-        // 1~12월, 월간 표시
-        binding.cvCalendar.setTitleFormatter(MonthArrayTitleFormatter(resources.getTextArray(R.array.calendar_month)))
-
-        // 일~토, 주간 표시
-        binding.cvCalendar.setWeekDayFormatter(ArrayWeekDayFormatter(resources.getTextArray(R.array.calendar_week)))
-
-        // 헤더 년 월로 표시
-        binding.cvCalendar.setTitleFormatter { day ->
-            val inputText = day.date
-            val calendarHeaderElements = inputText.toString().split("-")
-            val calendarHeaderBuilder = StringBuilder()
-
-            calendarHeaderBuilder.append(calendarHeaderElements[0]).append("년 ")
-                .append(calendarHeaderElements[1]).append("월")
-
-            calendarHeaderBuilder.toString()
-        }
-
-        val today = CalendarDay.today()
-        val disabledDates = hashSetOf<CalendarDay>()
-
-        val dayDisableDecorator = DayDisableDecorator(disabledDates, today, getColor(R.color.c_949292))
-        val todayDecorator = TodayDecorator(getColor(R.color.c_caab3f))
-
-        binding.cvCalendar.addDecorators(dayDisableDecorator, todayDecorator)
-
-        // 날짜 선택 시 처리
-        binding.cvCalendar.setOnDateChangedListener { _, date, _ ->
-            binding.cvCalendar.addDecorators(
-                ClearDecorator(getColor(R.color.white), date),
-                dayDisableDecorator, todayDecorator,
-                SelectDecorator(getColor(R.color.c_caab3f), date)
-            )
-
-            binding.btGo.isEnabled = true
-            binding.btGo.setTextColor(getColor(R.color.white))
-
-            val month = if(date.month<10) "0${date.month}" else "${date.month}"
-            val day = if(date.day<10) "0${date.day}" else "${date.day}"
-
-            datePref = "${date.year}.$month.$day${getWeek(date)}"
-        }
+    private fun onDatePicked(picked: LocalDate) {
+        date = picked
+        binding.btDate.text = formatDatePref(picked)
+        binding.btGo.isEnabled = true
     }
 
-    private fun getLocalTime() {
-        val localTime = LocalDateTime.now().toLocalTime()
-
-        val amPm = if(localTime.hour < 12) "오전" else "오후"
-
-        val hour = if(amPm == "오후") {
-            if((localTime.hour-12)<10) "0${(localTime.hour-12)}" else "${(localTime.hour-12)}"
-        } else {
-            if(localTime.hour<10) "0${localTime.hour}" else "${localTime.hour}"
-        }
-
-        val minute = if(localTime.minute<10) "0${localTime.minute}" else "${localTime.minute}"
-
-        @SuppressLint("SetTextI18n")
-        binding.btTime.text = "$amPm $hour:$minute"
-        timePref = if(amPm == "오후") "${localTime.hour}:$minute⏳" else "$hour:$minute⏳"
-    }
-
-
-    private fun setTimeSpinner() {
-        val cal = Calendar.getInstance()
-
-        val timeSetListener = TimePickerDialog.OnTimeSetListener { _, pHour, pMinute ->
-            cal.set(Calendar.HOUR_OF_DAY, pHour)
-            cal.set(Calendar.MINUTE, pMinute)
-
-            val amPm = if(pHour < 12) "오전" else "오후"
-
-            val hour = if(amPm == "오후") {
-                if((pHour-12)<10) "0${(pHour-12)}" else "${(pHour-12)}"
-            } else {
-                if(pHour<10) "0$pHour" else "$pHour"
-            }
-
-            val minute = if(pMinute<10) "0$pMinute" else "$pMinute"
-
-            @SuppressLint("SetTextI18n")
-            binding.btTime.text = "$amPm $hour:$minute"
-            timePref = "$hour:$minute⏳"
-        }
-
-        val timePickerDialog = TimePickerDialog(
-            this,
-            R.style.TimePickerTheme,
-            timeSetListener,
-            cal.get(Calendar.HOUR_OF_DAY),
-            cal.get(Calendar.MINUTE),
-            false
-        )
-        timePickerDialog.setButton(TimePickerDialog.BUTTON_POSITIVE, getString(R.string.confirm), timePickerDialog)
-        timePickerDialog.setButton(TimePickerDialog.BUTTON_NEGATIVE, getString(R.string.cancel), timePickerDialog)
-        timePickerDialog.show()
-    }
-
-    private fun getWeek(date: CalendarDay):String {
-        return when(LocalDate.of(date.year, date.month, date.day).dayOfWeek.value) {
-            1 -> "(월)"
-            2 -> "(화)"
-            3 -> "(수)"
-            4 -> "(목)"
-            5 -> "(금)"
-            6 -> "(토)"
-            7 -> "(일)"
-            else -> ""
-        }
+    private fun onTimePicked(hour: Int, minute: Int) {
+        timeHour = hour
+        timeMinute = minute
+        binding.btTime.text = formatTimeDisplay(hour, minute)
     }
 }

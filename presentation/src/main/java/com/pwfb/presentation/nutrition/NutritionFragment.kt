@@ -8,321 +8,204 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.google.android.gms.ads.AdRequest
 import com.pwfb.presentation.R
-import com.pwfb.presentation.base.BaseFragment
-import com.pwfb.presentation.common.DataStoreResult
+import androidx.fragment.app.Fragment
+import com.pwfb.presentation.common.NutritionObject
 import com.pwfb.presentation.databinding.FragmentNutritionBinding
+import com.pwfb.presentation.databinding.ViewNutritionInputBinding
+import com.pwfb.domain.entity.PrefKey
 import com.pwfb.presentation.MainViewModel
+import com.pwfb.presentation.NutrientUi
+import com.pwfb.presentation.showNutrientAvatar
+import com.pwfb.presentation.util.calcDDay
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Calendar
 
 
 @AndroidEntryPoint
-class NutritionFragment : BaseFragment() {
+class NutritionFragment : Fragment() {
 
-    private lateinit var binding: FragmentNutritionBinding
+    private var _binding: FragmentNutritionBinding? = null
+    private val binding get() = _binding!!
     private val viewModel: MainViewModel by viewModels()
+
+    /**
+     * 영양소 항목 카드와 저장 키의 대응
+     */
+    private class Field(val key: PrefKey, val view: ViewNutritionInputBinding, val ui: NutrientUi)
+
+    private fun fields(): List<Field> = listOf(
+        Field(PrefKey.CARBOHYDRATE, binding.carbohydrate, NutrientUi.of(NutritionObject.CARBOHYDRATE)),
+        Field(PrefKey.PROTEIN, binding.protein, NutrientUi.of(NutritionObject.PROTEIN)),
+        Field(PrefKey.FAT, binding.fat, NutrientUi.of(NutritionObject.FAT)),
+        Field(PrefKey.WATER, binding.water, NutrientUi.of(NutritionObject.WATER)),
+        Field(PrefKey.SODIUM, binding.sodium, NutrientUi.of(NutritionObject.SODIUM)),
+        Field(PrefKey.POTASSIUM, binding.potassium, NutrientUi.of(NutritionObject.POTASSIUM)),
+        Field(PrefKey.CREATINE, binding.creatine, NutrientUi.of(NutritionObject.CREATINE)),
+        Field(PrefKey.DIETARY_FIBER, binding.dietaryFiber, NutrientUi.of(NutritionObject.DIETARY_FIBER))
+    )
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentNutritionBinding.inflate(layoutInflater)
-        binding.adView.loadAd(AdRequest.Builder().build())
-
-        viewModelObserve()
-        viewModel.getDDay()
-        viewModel.getCarbohydrate()
-        viewModel.getProtein()
-        viewModel.getFat()
-        viewModel.getWater()
-        viewModel.getSodium()
-        viewModel.getPotassium()
-        viewModel.getCreatine()
-        viewModel.getDietaryFiber()
-
-        setPref()
-
+        _binding = FragmentNutritionBinding.inflate(inflater, container, false)
         return binding.root
     }
 
-    @SuppressLint("SimpleDateFormat", "SetTextI18n")
-    private fun viewModelObserve() {
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                launch {
-                    viewModel.dDayObserve.collectLatest {
-                        if(it == DataStoreResult.SET_D_DAY) {
-                            // todo
-                            return@collectLatest
-                        }
-                        val datePref = it.substring(0..9)
-                        val targetDate = SimpleDateFormat("yyyy.MM.dd").parse(datePref)!!.time
-                        val today = Calendar.getInstance().time.time
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        setupFields()
+        viewModelObserve()
+    }
 
-                        val dDay = (today - targetDate) / (60*60*24*1000)
+    override fun onDestroyView() {
+        _binding = null
+        super.onDestroyView()
+    }
 
-                        binding.tvDDay.text = "D$dDay"
-                        binding.tvDate.text = it
+    /**
+     * 카드마다 이모지·이름·단위를 넣고, 완료 키나 포커스 이동 시 입력값을 저장한다
+     */
+    private fun setupFields() {
+        fields().forEach { field ->
+            field.view.tvEmoji.showNutrientAvatar(field.ui)
+            field.view.tvName.setText(field.ui.nameRes)
+            field.view.tilInput.suffixText = getString(field.ui.unitRes)
 
-                        setTextDDay(dDay.toInt())
-                    }
+            val editText = field.view.etInput
+            editText.setOnEditorActionListener { _, action, _ ->
+                if (action == EditorInfo.IME_ACTION_DONE) {
+                    viewModel.save(field.key, editText.text.toString())
+                    editText.clearFocus()
+                    hideKeyBoard()
+                    true
+                } else {
+                    false
                 }
-
-                launch {
-                    viewModel.carbohydrateObserve.collectLatest {
-                        if(it == DataStoreResult.SET_CARBOHYDRATE) {
-                            return@collectLatest
-                        } else {
-                            binding.etCarbohydrate.setText(it)
-                        }
-                    }
-                }
-
-                launch {
-                    viewModel.proteinObserve.collectLatest {
-                        if(it == DataStoreResult.SET_PROTEIN) {
-                            return@collectLatest
-                        } else {
-                            binding.etProtein.setText(it)
-                        }
-                    }
-                }
-
-                launch {
-                    viewModel.fatObserve.collectLatest {
-                        if (it == DataStoreResult.SET_FAT) {
-                            return@collectLatest
-                        } else {
-                            binding.etFat.setText(it)
-                        }
-
-                    }
-                }
-
-                launch {
-                    viewModel.waterObserve.collectLatest {
-                        if(it == DataStoreResult.SET_WATER) {
-                            return@collectLatest
-                        } else {
-                            binding.etWater.setText(it)
-                        }
-                    }
-                }
-
-                launch {
-                    viewModel.sodiumObserve.collectLatest {
-                        if(it == DataStoreResult.SET_SODIUM) {
-                            return@collectLatest
-                        } else {
-                            binding.etSodium.setText(it)
-                        }
-                    }
-                }
-
-                launch {
-                    viewModel.potassiumObserve.collectLatest {
-                        if(it == DataStoreResult.SET_POTASSIUM) {
-                            return@collectLatest
-                        } else {
-                            binding.etPotassium.setText(it)
-                        }
-                    }
-                }
-
-                launch {
-                    viewModel.creatineObserve.collectLatest {
-                        if(it == DataStoreResult.SET_CREATINE) {
-                            return@collectLatest
-                        } else {
-                            binding.etCreatine.setText(it)
-                        }
-                    }
-                }
-
-                launch {
-                    viewModel.dietaryFiber.collectLatest {
-                        if(it == DataStoreResult.SET_DIETARY_FIBER) {
-                            return@collectLatest
-                        } else {
-                            binding.etCreatine.setText(it)
-                        }
-                    }
-                }
+            }
+            editText.setOnFocusChangeListener { _, hasFocus ->
+                if (!hasFocus) viewModel.save(field.key, editText.text.toString())
             }
         }
     }
 
-    private fun setPref() {
-        binding.etCarbohydrate.setOnEditorActionListener { _, action, _ ->
-            var handled = false
-            if(action == EditorInfo.IME_ACTION_DONE) {
-                viewModel.setCarbohydrate(binding.etCarbohydrate.text.toString())
-                binding.etCarbohydrate.setText(binding.etCarbohydrate.text.toString())
-                hideKeyBoard()
-                handled = true
-            }
-            handled
-        }
+    @SuppressLint("SetTextI18n")
+    private fun viewModelObserve() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.state(PrefKey.D_DAY).collectLatest {
+                        val dDay = calcDDay(it) ?: return@collectLatest
 
-        binding.etProtein.setOnEditorActionListener { _, action, _ ->
-            var handled = false
-            if(action == EditorInfo.IME_ACTION_DONE) {
-                viewModel.setProtein(binding.etProtein.text.toString())
-                binding.etProtein.setText(binding.etProtein.text.toString())
-                hideKeyBoard()
-                handled = true
-            }
-            handled
-        }
+                        binding.header.tvDDay.text = "D$dDay"
+                        binding.header.tvDate.text = it
 
-        binding.etFat.setOnEditorActionListener { _, action, _ ->
-            var handled = false
-            if(action == EditorInfo.IME_ACTION_DONE) {
-                viewModel.setFat(binding.etFat.text.toString())
-                binding.etFat.setText(binding.etFat.text.toString())
-                hideKeyBoard()
-                handled = true
-            }
-            handled
-        }
+                        setTextDDay(dDay)
+                    }
+                }
 
-        binding.etWater.setOnEditorActionListener { _, action, _ ->
-            var handled = false
-            if(action == EditorInfo.IME_ACTION_DONE) {
-                viewModel.setWater(binding.etWater.text.toString())
-                binding.etWater.setText(binding.etWater.text.toString())
-                hideKeyBoard()
-                handled = true
-            }
-            handled
-        }
+                // 저장 실패 시 사용자에게 알림
+                launch {
+                    viewModel.saveResult.collect {
+                        if (!it.success) {
+                            Toast.makeText(requireContext(), R.string.save_failed, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
 
-        binding.etSodium.setOnEditorActionListener { _, action, _ ->
-            var handled = false
-            if(action == EditorInfo.IME_ACTION_DONE) {
-                viewModel.setSodium(binding.etSodium.text.toString())
-                binding.etSodium.setText(binding.etSodium.text.toString())
-                hideKeyBoard()
-                handled = true
+                fields().forEach { field ->
+                    launch {
+                        viewModel.state(field.key).collectLatest {
+                            val editText = field.view.etInput
+                            if (editText.text.toString() != it) {
+                                editText.setText(it)
+                            }
+                        }
+                    }
+                }
             }
-            handled
-        }
-
-        binding.etPotassium.setOnEditorActionListener { _, action, _ ->
-            var handled = false
-            if(action == EditorInfo.IME_ACTION_DONE) {
-                viewModel.setPotassium(binding.etPotassium.text.toString())
-                binding.etPotassium.setText(binding.etPotassium.text.toString())
-                hideKeyBoard()
-                handled = true
-            }
-            handled
-        }
-
-        binding.etCreatine.setOnEditorActionListener { _, action, _ ->
-            var handled = false
-            if(action == EditorInfo.IME_ACTION_DONE) {
-                viewModel.setCreatine(binding.etCreatine.text.toString())
-                binding.etCreatine.setText(binding.etCreatine.text.toString())
-                hideKeyBoard()
-                handled = true
-            }
-            handled
-        }
-
-        binding.etDietaryFiber.setOnEditorActionListener { _, action, _ ->
-            var handled = false
-            if(action == EditorInfo.IME_ACTION_DONE) {
-                viewModel.setDietaryFiber(binding.etDietaryFiber.text.toString())
-                binding.etCreatine.setText(binding.etDietaryFiber.text.toString())
-                hideKeyBoard()
-                handled = true
-            }
-            handled
         }
     }
 
     private fun setTextDDay(dDay: Int) {
+        val carbohydrate = binding.carbohydrate.tvGuide
+        val protein = binding.protein.tvGuide
+        val fat = binding.fat.tvGuide
+        val water = binding.water.tvGuide
+        val sodium = binding.sodium.tvGuide
+        val potassium = binding.potassium.tvGuide
+        val creatine = binding.creatine.tvGuide
+        val dietaryFiber = binding.dietaryFiber.tvGuide
+
         when(dDay) {
             -7 -> {
-                binding.tvCarbohydrate.text = getString(R.string.nutrition_carbohydrate_day_7)
-                binding.tvProtein.text = getString(R.string.nutrition_usually_intake, "🥩")
-                binding.tvFat.text = getString(R.string.nutrition_fat_day_7654)
-                binding.tvWater.text = getString(R.string.nutrition_usually_intake_2, "💧")
-                binding.tvSodium.text = getString(R.string.nutrition_usually_intake_2, "🧂")
-                binding.tvPotassium.text = getString(R.string.nutrition_usually_intake_2, "🍌")
-                binding.tvCreatine.text = getString(R.string.nutrition_creatine_day_7654)
-                binding.tvDietaryFiber.text = getString(R.string.nutrition_usually_intake_2, "🥦")
+                carbohydrate.text = getString(R.string.nutrition_carbohydrate_day_7)
+                protein.text = getString(R.string.nutrition_usually_intake, "🥩")
+                fat.text = getString(R.string.nutrition_fat_day_7654)
+                water.text = getString(R.string.nutrition_usually_intake_2, "💧")
+                sodium.text = getString(R.string.nutrition_usually_intake_2, "🧂")
+                potassium.text = getString(R.string.nutrition_usually_intake_2, "🍌")
+                creatine.text = getString(R.string.nutrition_creatine_day_7654)
+                dietaryFiber.text = getString(R.string.nutrition_usually_intake_2, "🥦")
             }
-            -6 -> {
-                binding.tvCarbohydrate.text = getString(R.string.nutrition_carbohydrate_day_654)
-                binding.tvProtein.text = getString(R.string.nutrition_protein_day_654)
-                binding.tvFat.text = getString(R.string.nutrition_fat_day_7654)
-                binding.tvWater.text = getString(R.string.nutrition_usually_intake_2, "💧")
-                binding.tvSodium.text = getString(R.string.nutrition_usually_intake_2, "🧂")
-                binding.tvPotassium.text = getString(R.string.nutrition_usually_intake_2, "🍌")
-                binding.tvCreatine.text = getString(R.string.nutrition_creatine_day_7654)
-                binding.tvDietaryFiber.text = getString(R.string.nutrition_dietary_fiber_day_654)
-            }
-            -5 -> {
-                binding.tvCarbohydrate.text = getString(R.string.nutrition_carbohydrate_day_654)
-                binding.tvProtein.text = getString(R.string.nutrition_protein_day_654)
-                binding.tvFat.text = getString(R.string.nutrition_fat_day_7654)
-                binding.tvWater.text = getString(R.string.nutrition_usually_intake_2, "💧")
-                binding.tvSodium.text = getString(R.string.nutrition_usually_intake_2, "🧂")
-                binding.tvPotassium.text = getString(R.string.nutrition_usually_intake_2, "🍌")
-                binding.tvCreatine.text = getString(R.string.nutrition_creatine_day_7654)
-                binding.tvDietaryFiber.text = getString(R.string.nutrition_dietary_fiber_day_654)
-            }
-            -4 -> {
-                binding.tvCarbohydrate.text = getString(R.string.nutrition_carbohydrate_day_654)
-                binding.tvProtein.text = getString(R.string.nutrition_protein_day_654)
-                binding.tvFat.text = getString(R.string.nutrition_fat_day_7654)
-                binding.tvWater.text = getString(R.string.nutrition_usually_intake_2, "💧")
-                binding.tvSodium.text = getString(R.string.nutrition_usually_intake_2, "🧂")
-                binding.tvPotassium.text = getString(R.string.nutrition_usually_intake_2, "🍌")
-                binding.tvCreatine.text = getString(R.string.nutrition_creatine_day_7654)
-                binding.tvDietaryFiber.text = getString(R.string.nutrition_dietary_fiber_day_654)
+            -6, -5, -4 -> {
+                carbohydrate.text = getString(R.string.nutrition_carbohydrate_day_654)
+                protein.text = getString(R.string.nutrition_protein_day_654)
+                fat.text = getString(R.string.nutrition_fat_day_7654)
+                water.text = getString(R.string.nutrition_usually_intake_2, "💧")
+                sodium.text = getString(R.string.nutrition_usually_intake_2, "🧂")
+                potassium.text = getString(R.string.nutrition_usually_intake_2, "🍌")
+                creatine.text = getString(R.string.nutrition_creatine_day_7654)
+                dietaryFiber.text = getString(R.string.nutrition_dietary_fiber_day_654)
             }
             -3 -> {
-                binding.tvCarbohydrate.text = getString(R.string.nutrition_carbohydrate_day_3)
-                binding.tvProtein.text = getString(R.string.nutrition_protein_day_32)
-                binding.tvFat.text = getString(R.string.nutrition_fat_day_32)
-                binding.tvWater.text = getString(R.string.nutrition_water_day_3)
-                binding.tvSodium.text = getString(R.string.nutrition_sodium_day_3)
-                binding.tvPotassium.text = getString(R.string.nutrition_potassium_day_3)
-                binding.tvCreatine.text = getString(R.string.nutrition_creatine_day_321)
-                binding.tvDietaryFiber.text = getString(R.string.nutrition_dietary_fiber_day_321)
+                carbohydrate.text = getString(R.string.nutrition_carbohydrate_day_3)
+                protein.text = getString(R.string.nutrition_protein_day_32)
+                fat.text = getString(R.string.nutrition_fat_day_32)
+                water.text = getString(R.string.nutrition_water_day_3)
+                sodium.text = getString(R.string.nutrition_sodium_day_3)
+                potassium.text = getString(R.string.nutrition_potassium_day_3)
+                creatine.text = getString(R.string.nutrition_creatine_day_321)
+                dietaryFiber.text = getString(R.string.nutrition_dietary_fiber_day_321)
             }
             -2 -> {
-                binding.tvCarbohydrate.text = getString(R.string.nutrition_carbohydrate_day_2)
-                binding.tvProtein.text = getString(R.string.nutrition_protein_day_32)
-                binding.tvFat.text = getString(R.string.nutrition_fat_day_32)
-                binding.tvWater.text = getString(R.string.nutrition_water_day_2)
-                binding.tvSodium.text = getString(R.string.nutrition_sodium_day_2)
-                binding.tvPotassium.text = getString(R.string.nutrition_usually_intake_2, "🍌")
-                binding.tvCreatine.text = getString(R.string.nutrition_creatine_day_321)
-                binding.tvDietaryFiber.text = getString(R.string.nutrition_dietary_fiber_day_321)
+                carbohydrate.text = getString(R.string.nutrition_carbohydrate_day_2)
+                protein.text = getString(R.string.nutrition_protein_day_32)
+                fat.text = getString(R.string.nutrition_fat_day_32)
+                water.text = getString(R.string.nutrition_water_day_2)
+                sodium.text = getString(R.string.nutrition_sodium_day_2)
+                potassium.text = getString(R.string.nutrition_usually_intake_2, "🍌")
+                creatine.text = getString(R.string.nutrition_creatine_day_321)
+                dietaryFiber.text = getString(R.string.nutrition_dietary_fiber_day_321)
             }
             -1 -> {
-                binding.tvCarbohydrate.text = getString(R.string.nutrition_carbohydrate_day_1)
-                binding.tvProtein.text = getString(R.string.nutrition_protein_day_1)
-                binding.tvFat.text = getString(R.string.nutrition_fat_day_1)
-                binding.tvWater.text = getString(R.string.nutrition_water_day_1)
-                binding.tvSodium.text = getString(R.string.nutrition_sodium_day_1)
-                binding.tvPotassium.text = getString(R.string.nutrition_usually_intake_2, "🍌")
-                binding.tvCreatine.text = getString(R.string.nutrition_creatine_day_321)
-                binding.tvDietaryFiber.text = getString(R.string.nutrition_dietary_fiber_day_321)
+                carbohydrate.text = getString(R.string.nutrition_carbohydrate_day_1)
+                protein.text = getString(R.string.nutrition_protein_day_1)
+                fat.text = getString(R.string.nutrition_fat_day_1)
+                water.text = getString(R.string.nutrition_water_day_1)
+                sodium.text = getString(R.string.nutrition_sodium_day_1)
+                potassium.text = getString(R.string.nutrition_usually_intake_2, "🍌")
+                creatine.text = getString(R.string.nutrition_creatine_day_321)
+                dietaryFiber.text = getString(R.string.nutrition_dietary_fiber_day_321)
+            }
+            else -> {
+                // 피크위크 밖: 평소대로
+                carbohydrate.text = getString(R.string.nutrition_usually_intake_2, "🌾")
+                protein.text = getString(R.string.nutrition_usually_intake_2, "🥩")
+                fat.text = getString(R.string.nutrition_usually_intake_2, "🥜")
+                water.text = getString(R.string.nutrition_usually_intake_2, "💧")
+                sodium.text = getString(R.string.nutrition_usually_intake_2, "🧂")
+                potassium.text = getString(R.string.nutrition_usually_intake_2, "🍌")
+                creatine.text = getString(R.string.nutrition_usually_intake_2, "🔥")
+                dietaryFiber.text = getString(R.string.nutrition_usually_intake_2, "🥦")
             }
         }
     }

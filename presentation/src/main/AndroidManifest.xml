@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- AdMob·Firebase 호출이 이 모듈에 있으므로 라이브러리 lint를 위해 선언 (앱 매니페스트와 병합됨) -->
     <uses-permission android:name="android.permission.INTERNET" />
 </manifest>

@@ -1,6 +1,7 @@
 package com.pwfb.presentation.home
 
 import android.annotation.SuppressLint
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,24 +10,25 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.google.android.gms.ads.AdRequest
+import com.google.android.material.color.MaterialColors
 import com.pwfb.presentation.R
-import com.pwfb.presentation.base.BaseFragment
+import androidx.fragment.app.Fragment
 import com.pwfb.presentation.common.NutritionObject.nutritionEntityLists
 import com.pwfb.presentation.databinding.FragmentHomeBinding
+import com.pwfb.domain.entity.PrefKey
 import com.pwfb.presentation.MainViewModel
-import com.pwfb.presentation.common.DataStoreResult
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Calendar
+import com.pwfb.presentation.util.calcDDay
 
 
 @AndroidEntryPoint
-class HomeFragment : BaseFragment() {
+class HomeFragment : Fragment() {
 
-    private lateinit var binding: FragmentHomeBinding
+    private var _binding: FragmentHomeBinding? = null
+    private val binding get() = _binding!!
     private val viewModel: MainViewModel by viewModels()
     private var kg = 0.0
     override fun onCreateView(
@@ -34,54 +36,43 @@ class HomeFragment : BaseFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentHomeBinding.inflate(layoutInflater)
-
-        viewModelObserve()
-        viewModel.getWeight()
-
-        binding.adView.loadAd(AdRequest.Builder().build())
-
+        _binding = FragmentHomeBinding.inflate(inflater, container, false)
         return binding.root
     }
 
-    @SuppressLint("SimpleDateFormat", "SetTextI18n")
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        viewModelObserve()
+    }
+
+    override fun onDestroyView() {
+        _binding = null
+        super.onDestroyView()
+    }
+
+    @SuppressLint("SetTextI18n")
     private fun viewModelObserve() {
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                // 영양 섭취량은 체중(kg)에 의존하므로 체중과 D-Day가 모두 준비된 뒤에 그린다
                 launch {
-                    viewModel.weightObserve.collectLatest {
-                        if(it == DataStoreResult.SET_WEIGHT){
-                            // todo
-                            return@collectLatest
-                        }
-                        binding.tvWeight.text = it + getString(R.string.kg)
-                        kg = it.toDouble()
-                        viewModel.getDDay()
-                    }
-                }
+                    combine(
+                        viewModel.state(PrefKey.WEIGHT),
+                        viewModel.state(PrefKey.D_DAY)
+                    ) { weight, dDayText -> weight to dDayText }.collectLatest { (weight, dDayText) ->
+                        // 아직 읽기 전(빈 문자열)이면 무시
+                        kg = weight.toDoubleOrNull() ?: return@collectLatest
+                        binding.tvWeight.text = weight + getString(R.string.kg)
 
-                launch {
-                    viewModel.dDayObserve.collectLatest {
-                        if(it == DataStoreResult.SET_D_DAY) {
-                            // todo
-                            return@collectLatest
-                        }
-                        if(it.isEmpty()) {
-                            // todo
-                            return@collectLatest
-                        }
-                        val datePref = it.substring(0..9)
-                        val targetDate = SimpleDateFormat("yyyy.MM.dd").parse(datePref)!!.time
-                        val today = Calendar.getInstance().time.time
-
-                        val dDay = (today - targetDate) / (60*60*24*1000)
+                        val dDay = calcDDay(dDayText) ?: return@collectLatest
 
                         binding.tvDDay.text = "D$dDay"
-                        binding.tvDate.text = it
+                        binding.tvDate.text = dDayText
+                        renderProgress(dDay)
 
-                        binding.lvNutrition.adapter = ListAdapter(requireContext(), nutritionEntityLists, kg, dDay.toInt())
+                        binding.lvNutrition.adapter = ListAdapter(nutritionEntityLists, kg, dDay)
 
-                        binding.tvTraining.text = when(dDay.toInt()) {
+                        binding.tvTraining.text = when(dDay) {
                             -6 -> {
                                 getString(R.string.home_training_day_6)
                             }
@@ -102,7 +93,7 @@ class HomeFragment : BaseFragment() {
                             }
                         }
 
-                        binding.tvPeakWeekStrategy.text = when(dDay.toInt()) {
+                        binding.tvPeakWeekStrategy.text = when(dDay) {
                             -7 -> {
                                 getString(R.string.re_feed_day)
                             }
@@ -125,6 +116,21 @@ class HomeFragment : BaseFragment() {
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * D-7 → D-DAY 진행 스트립. i번째 칸은 D-(7-i)를 뜻하며, 오늘이 그 날 이후면 채운다.
+     */
+    private fun renderProgress(dDay: Int) {
+        val strip = binding.llProgress
+        val reachedColor = MaterialColors.getColor(strip, androidx.appcompat.R.attr.colorPrimary)
+        val remainingColor = MaterialColors.getColor(strip, com.google.android.material.R.attr.colorOutlineVariant)
+        for (i in 0 until strip.childCount) {
+            val segmentDay = i - (strip.childCount - 1)
+            val reached = dDay >= segmentDay
+            strip.getChildAt(i).backgroundTintList =
+                ColorStateList.valueOf(if (reached) reachedColor else remainingColor)
         }
     }
 }

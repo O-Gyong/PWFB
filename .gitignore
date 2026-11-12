@@ -18,3 +18,5 @@ google-services.json
 *.hprof
 gen-external-apklibs
 /app/release/
+/app/google-services.json
+/pwfb-keystore.jks.b64

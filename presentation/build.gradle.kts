@@ -1,82 +1,75 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
-    id("com.android.library")
-    id("org.jetbrains.kotlin.android")
-    id("dagger.hilt.android.plugin")
-    id("kotlin-kapt")
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt)
 }
 
 android {
     namespace = "com.pwfb.presentation"
-    compileSdk = AppConfig.COMPILE_SDK
+    compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
-        minSdk = AppConfig.MIN_SDK
+        minSdk = libs.versions.minSdk.get().toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
 
     buildTypes {
         release {
+            // 난독화는 app 모듈에서 전체 APK 기준으로 한 번만 수행한다
             isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
         }
     }
     compileOptions {
-        sourceCompatibility = CompileOption.JAVA_VERSION
-        targetCompatibility = CompileOption.JAVA_VERSION
-    }
-    kotlinOptions {
-        jvmTarget = CompileOption.JVM_TARGET
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures {
-        dataBinding = true
+        // 레이아웃에 바인딩 표현식(@{})을 쓰지 않으므로 DataBinding 대신 ViewBinding 사용 (kapt 불필요)
+        viewBinding = true
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
     }
 }
 
 dependencies {
-
-    // Module
-    implementation(project(":data"))
     implementation(project(":domain"))
 
-    // KTX
-    implementation(Libraries.KTX.CORE)
-    implementation(Libraries.KTX.KTX_ACTIVITY)
-    implementation(Libraries.KTX.KTX_FRAGMENT)
-    implementation(Libraries.KTX.KTX_VIEWMODEL)
-
-    // AndroidX ETC
-    implementation(Libraries.AndroidX.APP_COMPAT)
-    implementation(Libraries.AndroidX.MATERIAL)
-    implementation(Libraries.AndroidX.CONSTRAINT_LAYOUT)
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+    implementation(libs.androidx.constraintlayout)
 
     // Splash Screen
-    implementation(Libraries.SplashScreen.SPLASH_SCREEN)
+    implementation(libs.androidx.splashscreen)
 
-    // Navigation
-    implementation(Libraries.Navigation.NAVIGATION_FRAGMENT)
-    implementation(Libraries.Navigation.NAVIGATION_UI_KTX)
-
-    // Preferences DataStore
-    implementation(Libraries.DatastorePreferences.DATASTORE_PREFERENCES)
-    implementation(Libraries.DatastorePreferences.DATASTORE_PREFERENCES_CORE)
+    // ViewModel
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.activity.ktx)
+    implementation(libs.androidx.fragment.ktx)
 
     // Hilt
-    implementation(Libraries.Hilt.HILT_ANDROID)
-    kapt(Libraries.Hilt.HILT_ANDROID_COMPILER)
-
-    // CalendarView
-    implementation (Libraries.CalendarView.CALENDAR_VIEW)
-    implementation (Libraries.CalendarView.THREETENABP)
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
 
     // 애드몹
-    implementation (Libraries.AdMob.ADMOB)
+    implementation(libs.play.services.ads)
 
-    // Test
-    testImplementation(Libraries.Test.JUNIT)
-    androidTestImplementation(Libraries.Test.TEST_EXT_JUNIT)
-    androidTestImplementation(Libraries.Test.ESPRESSO_CORE)
+    // Firebase (로그 업로드, 설치 ID)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.storage)
+    implementation(libs.firebase.installations)
+
+    implementation(libs.app.update.ktx)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
 }

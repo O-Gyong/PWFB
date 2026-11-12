@@ -3,42 +3,37 @@ package com.pwfb.presentation.setting
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.inputmethod.InputMethodManager
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.core.widget.addTextChangedListener
 import com.pwfb.presentation.R
-import com.pwfb.presentation.base.BaseActivity
-import com.pwfb.presentation.common.DataStoreResult.RESULT_SUCCESS
+import androidx.appcompat.app.AppCompatActivity
 import com.pwfb.presentation.databinding.ActivityWeightBinding
 import com.pwfb.domain.entity.PwfbResultEntity
+import com.pwfb.presentation.util.applySystemBarInsetsAsPadding
+import com.pwfb.presentation.util.enablePwfbEdgeToEdge
 import dagger.hilt.android.AndroidEntryPoint
 
 
 @AndroidEntryPoint
-class WeightActivity: BaseActivity() {
+class WeightActivity: AppCompatActivity() {
 
     private lateinit var binding: ActivityWeightBinding
     private val viewModel: WeightViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.d(PWFB, "WeightActivity onCreate")
-
+        enablePwfbEdgeToEdge()
         super.onCreate(savedInstanceState)
         binding = ActivityWeightBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.clName.applySystemBarInsetsAsPadding()
 
         /**
-         * 이름 입력 시 버튼 색 변경
+         * 체중을 입력해야 Next 버튼 활성화
          */
         binding.etWeight.addTextChangedListener {
-            if(binding.etWeight.text.isEmpty()) {
-                binding.btNext.isEnabled = false
-                binding.btNext.setTextColor(getColor(R.color.c_949292))
-            }else {
-                binding.btNext.isEnabled = true
-                binding.btNext.setTextColor(getColor(R.color.white))
-            }
+            binding.btNext.isEnabled = !binding.etWeight.text.isNullOrBlank()
         }
 
         /**
@@ -53,11 +48,16 @@ class WeightActivity: BaseActivity() {
          * Next 버튼 클릭
          */
         binding.btNext.setOnClickListener {
-            viewModel.setWeight(binding.etWeight.text.toString())
+            val weight = binding.etWeight.text.toString()
+            if((weight.toDoubleOrNull() ?: 0.0) <= 0.0) {
+                Toast.makeText(this, R.string.weight_invalid, Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            viewModel.setWeight(weight)
         }
 
         viewModel.weightObserve.observe(this) {
-            if(it == PwfbResultEntity.Success(RESULT_SUCCESS)) {
+            if(it is PwfbResultEntity.Success) {
                 val intent = Intent(applicationContext, DayActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
                 startActivity(intent)

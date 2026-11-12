@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name="com.pwfb.PwfbApplication"
         android:allowBackup="true"
@@ -25,7 +27,7 @@
         </activity>
         <activity
             android:name="com.pwfb.presentation.MainActivity"
-            android:windowSoftInputMode="adjustResize"/>
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name="com.pwfb.presentation.setting.NameActivity"
             android:windowSoftInputMode="adjustResize" />
