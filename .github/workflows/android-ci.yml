@@ -2,9 +2,9 @@ name: Android CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "compose+clean_architecture" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "compose+clean_architecture" ]
 
 permissions:
   contents: read
@@ -32,7 +32,7 @@ jobs:
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }} # Repository Secret을 읽어옴
 
-      # --- Push(main 브랜치)일 때만 서명 키 등 릴리즈 시크릿을 사용 (PR에는 노출하지 않음) ---
+      # --- Push(compose+clean_architecture 브랜치)일 때만 서명 키 등 릴리즈 시크릿을 사용 (PR에는 노출하지 않음) ---
       - name: Setup Release Files (Keystore, Properties)
         if: github.event_name == 'push'
         shell: bash
