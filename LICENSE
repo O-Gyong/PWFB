@@ -1,0 +1,77 @@
+PWFB Source-Available License
+Copyright (c) 2023-2026 O_Gyong (OhGyong). All rights reserved.
+
+본 저장소의 소스 코드, 리소스, 디자인 및 기타 모든 자료(이하 "본 저작물")는
+저작권법의 보호를 받으며, 아래 조건에 따라서만 이용할 수 있습니다.
+
+1. 허용되는 행위
+   - 포트폴리오 평가, 코드 리뷰, 학습 등 비상업적 열람 목적으로 본 저작물을
+     읽고 로컬 환경에서 빌드·실행하는 행위
+   - 위 목적을 위해 필요한 범위 내에서 본 저작물을 로컬 환경에 복제하고
+     빌드 설정을 수정하는 행위
+
+2. 금지되는 행위
+   - 제1항에서 허용한 목적과 범위를 벗어나 본 저작물의 전부 또는 일부를
+     복제·수정·재배포하는 행위
+   - 본 저작물을 기반으로 한 애플리케이션을 Google Play, App Store 등
+     어떠한 앱 마켓이나 배포 채널에도 등록·배포하는 행위
+   - 본 저작물을 상업적 목적으로 이용하는 행위
+   - 본 저작물을 자신의 저작물인 것처럼 표시하는 행위
+
+3. 제3자 자료
+   - 본 저작물에 포함된 폰트, 라이브러리 등 제3자 자료는 각 자료의 고유
+     라이선스를 따릅니다. (예: licenses/ 디렉터리 참조)
+
+4. 보증의 부인 및 책임의 제한
+   - 본 저작물은 "있는 그대로" 제공되며, 저작권자는 상품성, 특정 목적에의
+     적합성, 정확성 등 어떠한 명시적·묵시적 보증도 하지 않습니다.
+   - 본 저작물에 포함된 영양·수분 섭취 관련 정보는 참고용이며, 의학적
+     조언이 아닙니다.
+   - 저작권자는 본 저작물의 열람, 복제, 빌드, 실행 또는 그 내용의 활용으로
+     인해 발생하는 어떠한 직접적·간접적·부수적·결과적 손해에 대해서도,
+     계약, 불법행위 등 그 청구 원인을 불문하고 책임을 지지 않습니다.
+
+위에 명시되지 않은 모든 권리는 저작권자에게 유보됩니다.
+이용 문의는 저장소 Issues를 통해 연락 바랍니다.
+
+----------------------------------------------------------------------
+
+This repository's source code, resources, design, and all other materials
+(the "Work") are protected by copyright and may be used only under the
+following terms.
+
+1. Permitted
+   - Viewing, reading, and building/running the Work locally for
+     non-commercial purposes such as portfolio evaluation, code review,
+     or personal study.
+   - Copying the Work to a local environment and modifying build
+     configuration, to the extent necessary for the purposes above.
+
+2. Prohibited
+   - Copying, modifying, or redistributing the Work in whole or in part
+     beyond the purposes and scope permitted in Section 1.
+   - Publishing or distributing any application derived from the Work on
+     Google Play, the App Store, or any other app marketplace or
+     distribution channel.
+   - Using the Work for any commercial purpose.
+   - Presenting the Work, or any part of it, as your own.
+
+3. Third-party materials
+   - Fonts, libraries, and other third-party materials included in the
+     Work are governed by their own licenses (e.g., see the licenses/
+     directory).
+
+4. Disclaimer of warranty and limitation of liability
+   - THE WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+     OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+     MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND ACCURACY.
+   - Any nutrition or hydration related information contained in the Work
+     is for reference only and does not constitute medical advice.
+   - IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM,
+     DAMAGES (WHETHER DIRECT, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL),
+     OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR
+     OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE VIEWING,
+     COPYING, BUILDING, RUNNING, OR USE OF THE WORK OR ITS CONTENTS.
+
+All rights not expressly granted above are reserved by the copyright holder.
+For licensing inquiries, please open an issue in this repository.
