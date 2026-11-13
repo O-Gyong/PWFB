@@ -136,6 +136,7 @@ dependencies {
 
     // 애드몹
     implementation(libs.play.services.ads)
+    implementation(libs.androidx.work.runtime)
 
     // Firebase
     implementation(platform(libs.firebase.bom))
