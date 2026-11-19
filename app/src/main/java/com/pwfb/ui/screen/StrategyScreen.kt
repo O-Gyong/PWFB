@@ -238,8 +238,9 @@ private fun QuestionCard(question: String, onYes: () -> Unit, onNo: () -> Unit) 
 
 /* ───────── 앱 정보 ───────── */
 
+/** PWFB 정보 시트. [onOpenLicenses]는 오픈소스 라이선스 화면으로 이동(시트는 호출 쪽에서 닫는다) */
 @Composable
-fun InfoSheetContent() {
+fun InfoSheetContent(onOpenLicenses: () -> Unit) {
     val context = LocalContext.current
     val versionName = runCatching {
         context.packageManager.getPackageInfo(context.packageName, 0).versionName
@@ -278,10 +279,10 @@ fun InfoSheetContent() {
             color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(Modifier.height(20.dp))
-        Text(
-            text = stringResource(R.string.font_credit),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+        TonalButton(
+            text = stringResource(R.string.open_source_licenses),
+            iconRes = R.drawable.ic_license,
+            onClick = onOpenLicenses
         )
     }
 }

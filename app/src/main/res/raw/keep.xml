@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 릴리스 리소스 축소(AGP 9 최적화 축소)에서 AboutLibraries가 생성한 라이선스 목록을 지키기 위한 선언 -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@raw/aboutlibraries" />

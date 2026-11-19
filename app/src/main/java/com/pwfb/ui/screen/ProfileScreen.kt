@@ -48,11 +48,15 @@ import java.time.LocalTime
 import kotlin.math.roundToInt
 
 /**
- * 프로필 탭: 이름·이상 체중, 목표(공복 체중 · 대회 D-Day) 수정, 당일 전략 · 앱 정보 · 로그 전송
+ * 프로필 탭: 이름·이상 체중, 목표(공복 체중 · 대회 D-Day) 수정, 당일 전략 · 앱 정보(오픈소스 라이선스) · 로그 전송
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(viewModel: MainViewModel, contentPadding: PaddingValues) {
+fun ProfileScreen(
+    viewModel: MainViewModel,
+    contentPadding: PaddingValues,
+    onOpenLicenses: () -> Unit
+) {
     val name by viewModel.state(PrefKey.NAME).collectAsStateWithLifecycle()
     val storedWeightText by viewModel.state(PrefKey.WEIGHT).collectAsStateWithLifecycle()
     val dDayText by viewModel.state(PrefKey.D_DAY).collectAsStateWithLifecycle()
@@ -231,7 +235,12 @@ fun ProfileScreen(viewModel: MainViewModel, contentPadding: PaddingValues) {
             onDismissRequest = { showInfo = false },
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ) {
-            InfoSheetContent()
+            InfoSheetContent(
+                onOpenLicenses = {
+                    showInfo = false
+                    onOpenLicenses()
+                }
+            )
         }
     }
 }

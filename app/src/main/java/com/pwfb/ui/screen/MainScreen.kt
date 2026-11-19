@@ -54,10 +54,12 @@ enum class MainTab(@StringRes val titleRes: Int, @DrawableRes val iconRes: Int) 
  * 네 탭이 하나의 [MainViewModel]을 공유한다.
  *
  * @param onUploadLog 프로필의 "로그 전송"에서 보낼 파일 (null이면 보낼 로그 없음)
+ * @param onOpenLicenses 프로필 "PWFB 정보" 시트의 "오픈소스 라이선스"에서 라이선스 화면으로 이동
  */
 @Composable
 fun MainScreen(
     onUploadLog: (File?) -> Unit,
+    onOpenLicenses: () -> Unit,
     viewModel: MainViewModel = hiltViewModel()
 ) {
     var tab by rememberSaveable { mutableStateOf(MainTab.HOME) }
@@ -133,7 +135,11 @@ fun MainScreen(
                 MainTab.HOME -> HomeScreen(viewModel = viewModel, contentPadding = innerPadding)
                 MainTab.NUTRITION -> NutritionScreen(viewModel = viewModel, contentPadding = innerPadding)
                 MainTab.TRAINING -> TrainingScreen(viewModel = viewModel, contentPadding = innerPadding)
-                MainTab.PROFILE -> ProfileScreen(viewModel = viewModel, contentPadding = innerPadding)
+                MainTab.PROFILE -> ProfileScreen(
+                    viewModel = viewModel,
+                    contentPadding = innerPadding,
+                    onOpenLicenses = onOpenLicenses
+                )
             }
         }
     }

@@ -24,11 +24,13 @@ object ScreenName {
     const val SCREEN_WEIGHT = "weight"
     const val SCREEN_DAY = "day"
     const val SCREEN_HOME = "home"
+    const val SCREEN_LICENSES = "licenses"
 }
 
 /**
  * 앱 전체 내비게이션. 최초 실행이면 온보딩(이름 → 체중 → D-Day)부터, 아니면 바로 메인.
  * 온보딩이 끝나면 온보딩 화면들을 백스택에서 걷어내 뒤로 가기로 돌아갈 수 없게 한다.
+ * 오픈소스 라이선스는 메인 위에 쌓이는 전체 화면이라 뒤로 가기로 프로필 탭에 돌아온다.
  */
 @Composable
 fun PwfbNavHost(isFirstInit: Boolean, onUploadLog: (File?) -> Unit) {
@@ -66,7 +68,13 @@ fun PwfbNavHost(isFirstInit: Boolean, onUploadLog: (File?) -> Unit) {
                 )
             }
             composable(ScreenName.SCREEN_HOME) {
-                MainScreen(onUploadLog = onUploadLog)
+                MainScreen(
+                    onUploadLog = onUploadLog,
+                    onOpenLicenses = { navController.navigate(ScreenName.SCREEN_LICENSES) }
+                )
+            }
+            composable(ScreenName.SCREEN_LICENSES) {
+                LicenseScreen(onBack = { navController.popBackStack() })
             }
         }
 

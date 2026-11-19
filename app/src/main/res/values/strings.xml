@@ -3,7 +3,6 @@
     <string name="app_name_upper">PWFB</string>
     <string name="app_description">보디빌딩 대회 피크위크 영양·트레이닝 가이드</string>
     <string name="app_version_format">버전 %s</string>
-    <string name="font_credit">서체: Pretendard (SIL Open Font License)</string>
 
     <string name="splash_title">PEAK WEEK FOR BODYBUILDING</string>
     <string name="home">Home</string>
@@ -52,6 +51,10 @@
     <string name="pwfb_information">PWFB 정보</string>
     <string name="log_send">로그 전송</string>
     <string name="the_day_strategy_1">당일 전략</string>
+    <string name="open_source_licenses">오픈소스 라이선스</string>
+    <string name="font_license_title">Pretendard</string>
+    <string name="font_license_name">서체 · SIL Open Font License 1.1</string>
+    <string name="back">뒤로</string>
     <string name="the_day_strategy_2">당일 전략</string>
     <string name="the_day_strategy_subtitle">무대 직전 컨디션에 맞는 마지막 조정을 안내합니다.</string>
 

@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.google.services)
     alias(libs.plugins.firebase.crashlytics)
+    alias(libs.plugins.aboutlibraries.android)
 }
 
 val localPropertiesFile = rootProject.file("local.properties")
@@ -104,6 +105,22 @@ kotlin {
     }
 }
 
+// 오픈소스 라이선스 고지: 의존성 POM에서 목록을 만들고, 라이선스 전문은 SPDX에서 받아 JSON에 담는다.
+aboutLibraries {
+    collect {
+        fetchRemoteLicense = true
+        fetchRemoteFunding = false
+        includePlatform = true
+    }
+    export {
+        excludeFields.addAll("funding")
+    }
+    library {
+        duplicationMode = com.mikepenz.aboutlibraries.plugin.DuplicateMode.MERGE
+        duplicationRule = com.mikepenz.aboutlibraries.plugin.DuplicateRule.SIMPLE
+    }
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
 
@@ -145,6 +162,9 @@ dependencies {
     implementation(libs.firebase.storage)
 
     implementation(libs.app.update.ktx)
+
+    // 오픈소스 라이선스 고지 화면
+    implementation(libs.aboutlibraries.compose.m3)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
