@@ -60,8 +60,8 @@ android {
         applicationId = "com.pwfb"
         minSdk = 29
         targetSdk = 36
-        versionCode = 18
-        versionName = "2.0.1"
+        versionCode = 19
+        versionName = "2.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
